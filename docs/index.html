@@ -103,6 +103,28 @@
   .links a { color: var(--acmad); text-decoration: none; }
   .links a:hover { text-decoration: underline; }
 
+  .tabs { display: flex; gap: 4px; margin: 14px 0 0; }
+  .tab {
+    border: 1px solid var(--border); border-bottom: none; background: none; color: var(--ink-2);
+    border-radius: 10px 10px 0 0; padding: 7px 18px; font: inherit; cursor: pointer;
+  }
+  .tab[aria-selected="true"] { background: var(--surface); color: var(--ink); font-weight: 600; }
+  .viewer { background: var(--surface); border: 1px solid var(--border); border-radius: 0 12px 12px 12px; padding: 16px; }
+  .viewer .vfilters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .viewer select { background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 13px; }
+  .yearstrip { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; align-items: center; }
+  .yearbtn {
+    border: 1px solid var(--border); background: none; color: var(--ink-2); border-radius: 8px;
+    padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .yearbtn[aria-pressed="true"] { background: var(--acmad); border-color: var(--acmad); color: #fff; font-weight: 600; }
+  .navbtn { border: 1px solid var(--border); background: none; color: var(--ink); border-radius: 8px; padding: 5px 12px; font: inherit; cursor: pointer; }
+  .stage { text-align: center; min-height: 300px; }
+  .stage img { max-width: 100%; max-height: 72vh; border: 1px solid var(--grid); border-radius: 8px; }
+  .stage .cap { color: var(--ink-2); font-size: 13px; margin-top: 8px; }
+  .stage .cap a { color: var(--acmad); }
+  .stage .empty { color: var(--muted); padding: 80px 0; }
+  .vhint { color: var(--muted); font-size: 12px; margin-top: 8px; }
   dialog { border: none; border-radius: 12px; padding: 0; max-width: min(92vw, 1100px); background: var(--surface); }
   dialog img { max-width: 100%; max-height: 82vh; display: block; }
   dialog .cap { padding: 10px 14px; font-size: 13px; color: var(--ink-2); }
@@ -125,6 +147,23 @@
   </p>
 </header>
 <main>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-gallery" aria-selected="true">Gallery</button>
+    <button class="tab" role="tab" id="tab-viewer" aria-selected="false">Year viewer</button>
+  </div>
+
+  <section id="view-viewer" class="viewer" hidden>
+    <div class="vfilters">
+      <select id="v-product"></select>
+      <select id="v-variable"><option value="">All variables</option><option value="precip">Precipitation</option><option value="temp">Temperature</option></select>
+      <select id="v-season"><option value="">All seasons</option></select>
+    </div>
+    <div class="yearstrip" id="v-years"></div>
+    <div class="stage" id="v-stage"></div>
+    <p class="vhint">← / → step through issues · pick a product above, then flip through years to compare forecasts</p>
+  </section>
+
+  <section id="view-gallery">
   <div class="filters" id="filters">
     <button class="orgbtn" data-org="acmad" aria-pressed="true"><span class="dot" style="background:var(--acmad)"></span>ACMAD</button>
     <button class="orgbtn" data-org="agrhymet" aria-pressed="true"><span class="dot" style="background:var(--agrhymet)"></span>AGRHYMET</button>
@@ -144,6 +183,7 @@
   <h2>Gallery</h2>
   <div class="cards" id="cards"></div>
   <button class="more" id="more" hidden>Show more</button>
+  </section>
 </main>
 <dialog id="lightbox"><img id="lb-img" alt=""><div class="cap" id="lb-cap"></div></dialog>
 <script>
@@ -287,6 +327,101 @@ for (const [id, key] of [["f-product","product"],["f-year","year"],["f-season","
 document.getElementById("f-search").addEventListener("input", e => { state.q = e.target.value.toLowerCase(); state.shown = 60; render(); });
 document.getElementById("more").addEventListener("click", () => { state.shown += 120; render(); });
 document.getElementById("lightbox").addEventListener("click", e => { if (e.target.tagName !== "IMG") e.currentTarget.close(); });
+// ---------- Year viewer ----------
+const vstate = { product: "presass", variable: "", season: "", idx: 0 };
+
+function viewable(r) {
+  return r.image || r.map_candidate || r.thumb;
+}
+function bestImg(r) { return r.image || r.map_candidate || r.thumb; }
+
+function variableOf(r) {
+  const n = (r.name + " " + r.path).toLowerCase();
+  if (/precip|rain|rr_|prcp/.test(n)) return "precip";
+  if (/temp|tmp/.test(n)) return "temp";
+  return "";
+}
+
+function vRows() {
+  let rows = CAT.filter(r => r.product === vstate.product && viewable(r) && r.year);
+  if (vstate.variable) rows = rows.filter(r => variableOf(r) === vstate.variable);
+  if (vstate.season) rows = rows.filter(r => r.season === vstate.season);
+  // one representative per year × season × variable: prefer real map images over thumbs
+  const score = r => (r.image ? 2 : r.map_candidate ? 1 : 0);
+  const byKey = new Map();
+  for (const r of rows) {
+    const k = `${r.year}|${r.season || ""}|${variableOf(r)}`;
+    if (!byKey.has(k) || score(r) > score(byKey.get(k))) byKey.set(k, r);
+  }
+  return [...byKey.values()].sort((a, b) => (a.year - b.year) || String(a.season).localeCompare(String(b.season)));
+}
+
+function renderViewer() {
+  const rows = vRows();
+  const strip = document.getElementById("v-years");
+  strip.innerHTML = "";
+  if (!rows.length) {
+    document.getElementById("v-stage").innerHTML = `<div class="empty">No viewable issues for this selection — try clearing the variable/season filters.</div>`;
+    return;
+  }
+  vstate.idx = Math.min(vstate.idx, rows.length - 1);
+  const prev = document.createElement("button");
+  prev.className = "navbtn"; prev.textContent = "←";
+  prev.onclick = () => { vstate.idx = Math.max(0, vstate.idx - 1); renderViewer(); };
+  strip.append(prev);
+  rows.forEach((r, i) => {
+    const b = document.createElement("button");
+    b.className = "yearbtn";
+    b.setAttribute("aria-pressed", i === vstate.idx);
+    b.textContent = r.season ? `${r.year} ${r.season}` : r.year;
+    b.onclick = () => { vstate.idx = i; renderViewer(); };
+    strip.append(b);
+  });
+  const next = document.createElement("button");
+  next.className = "navbtn"; next.textContent = "→";
+  next.onclick = () => { vstate.idx = Math.min(rows.length - 1, vstate.idx + 1); renderViewer(); };
+  strip.append(next);
+
+  const r = rows[vstate.idx];
+  document.getElementById("v-stage").innerHTML = `
+    <img src="${bestImg(r)}" alt="${r.name}">
+    <div class="cap">${PRODUCT_LABELS[r.product] || r.product} · ${r.year}${r.season ? " · " + r.season : ""}${variableOf(r) ? " · " + variableOf(r) : ""}
+      · ${r.name} · <a href="${r.source_url}" target="_blank" rel="noopener">source ↗</a>${r.map_candidate && !r.image ? " · map extracted from PDF" : ""}</div>`;
+}
+
+function initViewer() {
+  const products = [...new Set(CAT.filter(r => viewable(r) && r.year).map(r => r.product))].sort();
+  const sel = document.getElementById("v-product");
+  sel.innerHTML = products.map(p => `<option value="${p}">${PRODUCT_LABELS[p] || p}</option>`).join("");
+  if (!products.includes(vstate.product)) vstate.product = products[0];
+  sel.value = vstate.product;
+  const seasons = [...new Set(CAT.filter(r => r.product === vstate.product).map(r => r.season).filter(Boolean))].sort();
+  const ssel = document.getElementById("v-season");
+  while (ssel.options.length > 1) ssel.remove(1);
+  seasons.forEach(s => { const o = document.createElement("option"); o.value = s; o.textContent = s; ssel.append(o); });
+  renderViewer();
+}
+
+document.getElementById("v-product").addEventListener("change", e => { vstate.product = e.target.value; vstate.season = ""; document.getElementById("v-season").value = ""; vstate.idx = 0; initViewer(); });
+document.getElementById("v-variable").addEventListener("change", e => { vstate.variable = e.target.value; vstate.idx = 0; renderViewer(); });
+document.getElementById("v-season").addEventListener("change", e => { vstate.season = e.target.value; vstate.idx = 0; renderViewer(); });
+
+function showTab(which) {
+  const viewer = which === "viewer";
+  document.getElementById("view-viewer").hidden = !viewer;
+  document.getElementById("view-gallery").hidden = viewer;
+  document.getElementById("tab-viewer").setAttribute("aria-selected", viewer);
+  document.getElementById("tab-gallery").setAttribute("aria-selected", !viewer);
+  if (viewer) initViewer();
+}
+document.getElementById("tab-gallery").addEventListener("click", () => showTab("gallery"));
+document.getElementById("tab-viewer").addEventListener("click", () => showTab("viewer"));
+document.addEventListener("keydown", e => {
+  if (document.getElementById("view-viewer").hidden) return;
+  if (e.key === "ArrowLeft") { vstate.idx = Math.max(0, vstate.idx - 1); renderViewer(); }
+  if (e.key === "ArrowRight") { vstate.idx = vstate.idx + 1; renderViewer(); }
+});
+
 document.getElementById("themetoggle").addEventListener("click", () => {
   const root = document.documentElement;
   const dark = root.dataset.theme === "dark" || (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);

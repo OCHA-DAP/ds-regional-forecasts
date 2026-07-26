@@ -25,7 +25,8 @@
   "year": null,
   "lang": null,
   "size_kb": 938,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_ACCOF_10_Flyer-1-1.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_ACCOF_10_Flyer-1-1.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_ACCOF_10_Flyer-1-1.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -53,7 +54,8 @@
   "year": null,
   "lang": null,
   "size_kb": 317,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_BULLETIN_PRESAC-14.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_BULLETIN_PRESAC-14.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_BULLETIN_PRESAC-14.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -67,7 +69,8 @@
   "year": null,
   "lang": null,
   "size_kb": 438,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_Communiqu_C3_A9-Finale_PRESAC-14-VF-05102021.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_Communiqu_C3_A9-Finale_PRESAC-14-VF-05102021.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_Communiqu_C3_A9-Finale_PRESAC-14-VF-05102021.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -81,7 +84,8 @@
   "year": 2021,
   "lang": null,
   "size_kb": 12521,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_Dek3_Nov_2021_Technical_NotesTN.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_Dek3_Nov_2021_Technical_NotesTN.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_Dek3_Nov_2021_Technical_NotesTN.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -95,7 +99,8 @@
   "year": null,
   "lang": "en",
   "size_kb": 420,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_EN-SUMMARY-SARCOF25.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_EN-SUMMARY-SARCOF25.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_EN-SUMMARY-SARCOF25.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -109,7 +114,8 @@
   "year": null,
   "lang": "en",
   "size_kb": 1556,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_EN_SARCOF-25-STATEMENT.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_EN_SARCOF-25-STATEMENT.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_EN_SARCOF-25-STATEMENT.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -123,7 +129,8 @@
   "year": null,
   "lang": null,
   "size_kb": 1215,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_GHACOF59_Statement_Final.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_GHACOF59_Statement_Final.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_GHACOF59_Statement_Final.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -137,7 +144,8 @@
   "year": null,
   "lang": "en",
   "size_kb": 133,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_SWIOCOF-10_RecommendationsfinalENG.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_SWIOCOF-10_RecommendationsfinalENG.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_SWIOCOF-10_RecommendationsfinalENG.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -151,7 +159,8 @@
   "year": null,
   "lang": null,
   "size_kb": 184,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_SWIOCOF-10_RecommendationsfinalFR.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_SWIOCOF-10_RecommendationsfinalFR.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_SWIOCOF-10_RecommendationsfinalFR.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -165,7 +174,8 @@
   "year": null,
   "lang": "en",
   "size_kb": 571,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_SWIOCOF-10_Statement-EN.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_SWIOCOF-10_Statement-EN.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_SWIOCOF-10_Statement-EN.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -179,7 +189,8 @@
   "year": null,
   "lang": null,
   "size_kb": 572,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_SWIOCOF-10_Statement-FR.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_SWIOCOF-10_Statement-FR.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_SWIOCOF-10_Statement-FR.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -193,7 +204,8 @@
   "year": 2021,
   "lang": null,
   "size_kb": 59035,
-  "thumb": "thumbs/acmad_ACCOF_accof-10_Technical_-Note-SON_OND_NDJ_2021_CentralAfirca.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-10_Technical_-Note-SON_OND_NDJ_2021_CentralAfirca.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-10_Technical_-Note-SON_OND_NDJ_2021_CentralAfirca.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -207,7 +219,8 @@
   "year": null,
   "lang": null,
   "size_kb": 945,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_ACCOF_11_Flyer.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_ACCOF_11_Flyer.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_ACCOF_11_Flyer.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -221,7 +234,8 @@
   "year": null,
   "lang": null,
   "size_kb": 317,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_BULLETIN_PRESAC-14.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_BULLETIN_PRESAC-14.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_BULLETIN_PRESAC-14.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -235,7 +249,8 @@
   "year": null,
   "lang": null,
   "size_kb": 438,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_Communiqu_C3_A9-Finale_PRESAC-14-VF-05102021.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_Communiqu_C3_A9-Finale_PRESAC-14-VF-05102021.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_Communiqu_C3_A9-Finale_PRESAC-14-VF-05102021.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -249,7 +264,8 @@
   "year": 2021,
   "lang": null,
   "size_kb": 12521,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_Dek3_Nov_2021_Technical_NotesTN.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_Dek3_Nov_2021_Technical_NotesTN.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_Dek3_Nov_2021_Technical_NotesTN.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -263,7 +279,8 @@
   "year": null,
   "lang": "en",
   "size_kb": 420,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_EN-SUMMARY-SARCOF25.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_EN-SUMMARY-SARCOF25.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_EN-SUMMARY-SARCOF25.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -277,7 +294,8 @@
   "year": null,
   "lang": "en",
   "size_kb": 1556,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_EN_SARCOF-25-STATEMENT.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_EN_SARCOF-25-STATEMENT.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_EN_SARCOF-25-STATEMENT.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -291,7 +309,8 @@
   "year": null,
   "lang": null,
   "size_kb": 1215,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_GHACOF59_Statement_Final.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_GHACOF59_Statement_Final.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_GHACOF59_Statement_Final.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -305,7 +324,8 @@
   "year": null,
   "lang": "en",
   "size_kb": 133,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_SWIOCOF-10_RecommendationsfinalENG.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_SWIOCOF-10_RecommendationsfinalENG.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_SWIOCOF-10_RecommendationsfinalENG.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -319,7 +339,8 @@
   "year": null,
   "lang": null,
   "size_kb": 184,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_SWIOCOF-10_RecommendationsfinalFR.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_SWIOCOF-10_RecommendationsfinalFR.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_SWIOCOF-10_RecommendationsfinalFR.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -333,7 +354,8 @@
   "year": null,
   "lang": "en",
   "size_kb": 571,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_SWIOCOF-10_Statement-EN.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_SWIOCOF-10_Statement-EN.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_SWIOCOF-10_Statement-EN.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -347,7 +369,8 @@
   "year": null,
   "lang": null,
   "size_kb": 572,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_SWIOCOF-10_Statement-FR.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_SWIOCOF-10_Statement-FR.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_SWIOCOF-10_Statement-FR.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -361,7 +384,8 @@
   "year": 2021,
   "lang": null,
   "size_kb": 59035,
-  "thumb": "thumbs/acmad_ACCOF_accof-11_Technical_-Note-SON_OND_NDJ_2021_CentralAfirca.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-11_Technical_-Note-SON_OND_NDJ_2021_CentralAfirca.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-11_Technical_-Note-SON_OND_NDJ_2021_CentralAfirca.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -403,7 +427,8 @@
   "year": null,
   "lang": null,
   "size_kb": 1147,
-  "thumb": "thumbs/acmad_ACCOF_accof-12_PRESA-GG-FLYER.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-12_PRESA-GG-FLYER.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-12_PRESA-GG-FLYER.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -459,7 +484,8 @@
   "year": null,
   "lang": null,
   "size_kb": 947,
-  "thumb": "thumbs/acmad_ACCOF_accof-14_ACCOF_14_Flyer-1.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-14_ACCOF_14_Flyer-1.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-14_ACCOF_14_Flyer-1.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -473,7 +499,8 @@
   "year": null,
   "lang": null,
   "size_kb": 2469,
-  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF-15_ICPAC.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF-15_ICPAC.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-15_ACCOF-15_ICPAC.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -487,7 +514,8 @@
   "year": null,
   "lang": null,
   "size_kb": 1312,
-  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF15-AGRHYMET.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF15-AGRHYMET.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-15_ACCOF15-AGRHYMET.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -501,7 +529,8 @@
   "year": null,
   "lang": null,
   "size_kb": 5350,
-  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF15-MF-contribution-SWIO.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF15-MF-contribution-SWIO.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-15_ACCOF15-MF-contribution-SWIO.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -543,7 +572,8 @@
   "year": 2024,
   "lang": null,
   "size_kb": 2406,
-  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF15_FMA2024-forecast-Maroccoo.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF15_FMA2024-forecast-Maroccoo.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-15_ACCOF15_FMA2024-forecast-Maroccoo.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -557,7 +587,8 @@
   "year": null,
   "lang": null,
   "size_kb": 488,
-  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF15_STATEMENT.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF15_STATEMENT.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-15_ACCOF15_STATEMENT.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -571,7 +602,8 @@
   "year": null,
   "lang": null,
   "size_kb": 819,
-  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF_15_Flyer.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-15_ACCOF_15_Flyer.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-15_ACCOF_15_Flyer.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -585,7 +617,8 @@
   "year": 2024,
   "lang": null,
   "size_kb": 4168,
-  "thumb": "thumbs/acmad_ACCOF_accof-15_ACMAD_ACCOF-15_Synthesis_Jan_2024_F.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-15_ACMAD_ACCOF-15_Synthesis_Jan_2024_F.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-15_ACMAD_ACCOF-15_Synthesis_Jan_2024_F.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -599,7 +632,8 @@
   "year": null,
   "lang": null,
   "size_kb": 4184,
-  "thumb": "thumbs/acmad_ACCOF_accof-15_SADC-CSC-contribution-to-ACCOF-15.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-15_SADC-CSC-contribution-to-ACCOF-15.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-15_SADC-CSC-contribution-to-ACCOF-15.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -613,7 +647,8 @@
   "year": null,
   "lang": null,
   "size_kb": 1010,
-  "thumb": "thumbs/acmad_ACCOF_accof-16_ACCOF-AGRHYMET.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-16_ACCOF-AGRHYMET.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-16_ACCOF-AGRHYMET.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -627,7 +662,8 @@
   "year": null,
   "lang": null,
   "size_kb": 4182,
-  "thumb": "thumbs/acmad_ACCOF_accof-16_ACCOF16-ICPAC.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-16_ACCOF16-ICPAC.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-16_ACCOF16-ICPAC.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -641,7 +677,8 @@
   "year": null,
   "lang": null,
   "size_kb": 3960,
-  "thumb": "thumbs/acmad_ACCOF_accof-16_ACCOF16-MF-contribution-SWIO.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-16_ACCOF16-MF-contribution-SWIO.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-16_ACCOF16-MF-contribution-SWIO.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -669,7 +706,8 @@
   "year": null,
   "lang": null,
   "size_kb": 789,
-  "thumb": "thumbs/acmad_ACCOF_accof-16_ACCOF16_STATEMENT.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-16_ACCOF16_STATEMENT.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-16_ACCOF16_STATEMENT.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -683,7 +721,8 @@
   "year": 2024,
   "lang": null,
   "size_kb": 4442,
-  "thumb": "thumbs/acmad_ACCOF_accof-16_ACMAD_ACCOF-16_Synthesis_April_2024.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-16_ACMAD_ACCOF-16_Synthesis_April_2024.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-16_ACMAD_ACCOF-16_Synthesis_April_2024.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -697,7 +736,8 @@
   "year": null,
   "lang": null,
   "size_kb": 2466,
-  "thumb": "thumbs/acmad_ACCOF_accof-16_CAPC-AC_Presentation.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-16_CAPC-AC_Presentation.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-16_CAPC-AC_Presentation.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -725,7 +765,8 @@
   "year": null,
   "lang": null,
   "size_kb": 2128,
-  "thumb": "thumbs/acmad_ACCOF_accof-16_SADC-CSC-contribution-to-ACCOF-16.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-16_SADC-CSC-contribution-to-ACCOF-16.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-16_SADC-CSC-contribution-to-ACCOF-16.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -739,7 +780,8 @@
   "year": 2024,
   "lang": null,
   "size_kb": 3521,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCCOF17-JJA_Morocco-2024.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCCOF17-JJA_Morocco-2024.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_ACCCOF17-JJA_Morocco-2024.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -753,7 +795,8 @@
   "year": 2024,
   "lang": null,
   "size_kb": 2795,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17-ICPAC_JJAS2024-ClimateOutlook.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17-ICPAC_JJAS2024-ClimateOutlook.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_ACCOF17-ICPAC_JJAS2024-ClimateOutlook.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -767,7 +810,8 @@
   "year": null,
   "lang": null,
   "size_kb": 8085,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17-MF-Outlook-SWIO.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17-MF-Outlook-SWIO.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_ACCOF17-MF-Outlook-SWIO.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -781,7 +825,8 @@
   "year": null,
   "lang": null,
   "size_kb": 1689,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17-MF-methodology-SWIO.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17-MF-methodology-SWIO.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_ACCOF17-MF-methodology-SWIO.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -795,7 +840,8 @@
   "year": null,
   "lang": null,
   "size_kb": 2408,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17_AGRHYMET.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17_AGRHYMET.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_ACCOF17_AGRHYMET.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -823,7 +869,8 @@
   "year": null,
   "lang": null,
   "size_kb": 310,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17_STATEMENT.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_ACCOF17_STATEMENT.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_ACCOF17_STATEMENT.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -837,7 +884,8 @@
   "year": 2024,
   "lang": null,
   "size_kb": 3506,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_ACMAD_ACCOF-17_Synthesis_Outllook_May_2024.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_ACMAD_ACCOF-17_Synthesis_Outllook_May_2024.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_ACMAD_ACCOF-17_Synthesis_Outllook_May_2024.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -851,7 +899,8 @@
   "year": null,
   "lang": null,
   "size_kb": 4950,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_ACMADs-9-Step-Approach_Method.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_ACMADs-9-Step-Approach_Method.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_ACMADs-9-Step-Approach_Method.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -865,7 +914,8 @@
   "year": 2023,
   "lang": null,
   "size_kb": 1316,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_Anticipatory-Action-Africa-Region-2023-2025-IFRC.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_Anticipatory-Action-Africa-Region-2023-2025-IFRC.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_Anticipatory-Action-Africa-Region-2023-2025-IFRC.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -879,7 +929,8 @@
   "year": null,
   "lang": null,
   "size_kb": 4661,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_CAPC-AC_Presentation_ACCOF_17.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_CAPC-AC_Presentation_ACCOF_17.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_CAPC-AC_Presentation_ACCOF_17.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -893,7 +944,8 @@
   "year": null,
   "lang": null,
   "size_kb": 729,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_Flyer-ACCOF-17.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_Flyer-ACCOF-17.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_Flyer-ACCOF-17.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -907,7 +959,8 @@
   "year": null,
   "lang": null,
   "size_kb": 1008,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_Morocco-31052024.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_Morocco-31052024.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_Morocco-31052024.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -921,7 +974,8 @@
   "year": 2023,
   "lang": null,
   "size_kb": 1074,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_SADC-Reflection-of-Regional-Seasonal-Climate-Outlook-for-2023-24-season-SR.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_SADC-Reflection-of-Regional-Seasonal-Climate-Outlook-for-2023-24-season-SR.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_SADC-Reflection-of-Regional-Seasonal-Climate-Outlook-for-2023-24-season-SR.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -935,7 +989,8 @@
   "year": null,
   "lang": null,
   "size_kb": 1968,
-  "thumb": "thumbs/acmad_ACCOF_accof-17_effective_communication_acmad_ACCOF17.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-17_effective_communication_acmad_ACCOF17.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-17_effective_communication_acmad_ACCOF17.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -977,7 +1032,8 @@
   "year": null,
   "lang": null,
   "size_kb": 586,
-  "thumb": "thumbs/acmad_ACCOF_accof-18_ACCOF18_Statement-vf.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-18_ACCOF18_Statement-vf.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-18_ACCOF18_Statement-vf.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -1005,7 +1061,8 @@
   "year": null,
   "lang": null,
   "size_kb": 713,
-  "thumb": "thumbs/acmad_ACCOF_accof-19_ACCOF19_Consensus-Statement.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-19_ACCOF19_Consensus-Statement.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-19_ACCOF19_Consensus-Statement.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -1019,7 +1076,8 @@
   "year": null,
   "lang": "fr",
   "size_kb": 793,
-  "thumb": "thumbs/acmad_ACCOF_accof-21_ACCOF-21-Brief-for-Policy-and-Decision-makers_Vfinal-1.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-21_ACCOF-21-Brief-for-Policy-and-Decision-makers_Vfinal-1.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-21_ACCOF-21-Brief-for-Policy-and-Decision-makers_Vfinal-1.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -1033,7 +1091,8 @@
   "year": null,
   "lang": "fr",
   "size_kb": 702,
-  "thumb": "thumbs/acmad_ACCOF_accof-21_ACCOF-21-Statement_Vfinal-1.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-21_ACCOF-21-Statement_Vfinal-1.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-21_ACCOF-21-Statement_Vfinal-1.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -1047,7 +1106,8 @@
   "year": null,
   "lang": null,
   "size_kb": 654,
-  "thumb": "thumbs/acmad_ACCOF_accof-21_Draft_ConceptNote_ACCOF21agenda-v2.docx.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-21_Draft_ConceptNote_ACCOF21agenda-v2.docx.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-21_Draft_ConceptNote_ACCOF21agenda-v2.docx.pdf_map.png"
  },
  {
   "org": "acmad",
@@ -1061,7 +1121,8 @@
   "year": null,
   "lang": null,
   "size_kb": 685,
-  "thumb": "thumbs/acmad_ACCOF_accof-21_Lusaka_Opening_Joint-Press-Release_Final.pdf.png"
+  "thumb": "thumbs/acmad_ACCOF_accof-21_Lusaka_Opening_Joint-Press-Release_Final.pdf.png",
+  "map_candidate": "maps/acmad_ACCOF_accof-21_Lusaka_Opening_Joint-Press-Release_Final.pdf_map.png"
  },
  {
   "path": "acmad/CDD/longrangeforecastingservice/2018/Jan/LONG RANGE FORECAST/Annual Cycle Precip.pptx",
@@ -1576,7 +1637,8 @@
   "year": 2018,
   "lang": null,
   "size_kb": 887,
-  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2018_June_Long_Range_Forecast_DOC_WEB_JUNE_2018_ACMAD_long_range_JAS_ASO_2018.pdf.png"
+  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2018_June_Long_Range_Forecast_DOC_WEB_JUNE_2018_ACMAD_long_range_JAS_ASO_2018.pdf.png",
+  "map_candidate": "maps/acmad_CDD_longrangeforecastingservice_2018_June_Long_Range_Forecast_DOC_WEB_JUNE_2018_ACMAD_long_range_JAS_ASO_2018.pdf_map.png"
  },
  {
   "path": "acmad/CDD/longrangeforecastingservice/2018/June/Long Range Forecast/DOC_WEB_JUNE_2018/Bull_dek 2_Jul_2018.docx",
@@ -1821,7 +1883,8 @@
   "year": 2018,
   "lang": null,
   "size_kb": 657,
-  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2018_June_Long_Range_Forecast_DOC_WEB_JUNE_2018_POLICY_BRIEF_JAS_ASO_2018.pdf.png"
+  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2018_June_Long_Range_Forecast_DOC_WEB_JUNE_2018_POLICY_BRIEF_JAS_ASO_2018.pdf.png",
+  "map_candidate": "maps/acmad_CDD_longrangeforecastingservice_2018_June_Long_Range_Forecast_DOC_WEB_JUNE_2018_POLICY_BRIEF_JAS_ASO_2018.pdf_map.png"
  },
  {
   "path": "acmad/CDD/longrangeforecastingservice/2018/June/Long Range Forecast/DOC_WEB_JUNE_2018/bulletinACMAD_bulletin_dekadal.pdf",
@@ -1834,7 +1897,8 @@
   "year": 2018,
   "lang": null,
   "size_kb": 1547,
-  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2018_June_Long_Range_Forecast_DOC_WEB_JUNE_2018_bulletinACMAD_bulletin_dekadal.pdf.png"
+  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2018_June_Long_Range_Forecast_DOC_WEB_JUNE_2018_bulletinACMAD_bulletin_dekadal.pdf.png",
+  "map_candidate": "maps/acmad_CDD_longrangeforecastingservice_2018_June_Long_Range_Forecast_DOC_WEB_JUNE_2018_bulletinACMAD_bulletin_dekadal.pdf_map.png"
  },
  {
   "path": "acmad/CDD/longrangeforecastingservice/2018/June/Long Range Forecast/DOC_WEB_JUNE_2018/image5.jpg",
@@ -6632,7 +6696,8 @@
   "year": 2026,
   "lang": null,
   "size_kb": 500,
-  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2026_February_Long_Range_Forecast_Bulletin__MAM_AMJ_2026.pdf.png"
+  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2026_February_Long_Range_Forecast_Bulletin__MAM_AMJ_2026.pdf.png",
+  "map_candidate": "maps/acmad_CDD_longrangeforecastingservice_2026_February_Long_Range_Forecast_Bulletin__MAM_AMJ_2026.pdf_map.png"
  },
  {
   "path": "acmad/CDD/longrangeforecastingservice/2026/February/Policy-brief-fcst-mamj-2026.jpeg",
@@ -9503,7 +9568,8 @@
   "year": 2026,
   "lang": null,
   "size_kb": 488,
-  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2026_May_Long_Range_Forecast_Long_Range_Forecast_Bulletin.pdf.png"
+  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2026_May_Long_Range_Forecast_Long_Range_Forecast_Bulletin.pdf.png",
+  "map_candidate": "maps/acmad_CDD_longrangeforecastingservice_2026_May_Long_Range_Forecast_Long_Range_Forecast_Bulletin.pdf_map.png"
  },
  {
   "path": "acmad/CDD/longrangeforecastingservice/2026/May/Long_Range_Forecast/Long_Range_Forecast_Bulletin_ JJA_JAS_2026.doc",
@@ -9528,7 +9594,8 @@
   "year": 2026,
   "lang": null,
   "size_kb": 488,
-  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2026_May_Long_Range_Forecast_Long_Range_Forecast_Bulletin__JJA_JAS_2026.pdf.png"
+  "thumb": "thumbs/acmad_CDD_longrangeforecastingservice_2026_May_Long_Range_Forecast_Long_Range_Forecast_Bulletin__JJA_JAS_2026.pdf.png",
+  "map_candidate": "maps/acmad_CDD_longrangeforecastingservice_2026_May_Long_Range_Forecast_Long_Range_Forecast_Bulletin__JJA_JAS_2026.pdf_map.png"
  },
  {
   "path": "acmad/CDD/longrangeforecastingservice/2026/May/Long_Range_Forecast/RR-JAS-125%.jpeg",
@@ -9762,7 +9829,8 @@
   "year": 2022,
   "lang": "fr",
   "size_kb": 1883,
-  "thumb": "thumbs/agrhymet_presagg_2022_PRESAGG-2022__communique_final_FR.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2022_PRESAGG-2022__communique_final_FR.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2022_PRESAGG-2022__communique_final_FR.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9778,7 +9846,8 @@
   "year": 2023,
   "lang": "en",
   "size_kb": 695,
-  "thumb": "thumbs/agrhymet_presagg_2023_COMMUNIQUE-FINAL_PRESAGG_2023_VF_Engl.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2023_COMMUNIQUE-FINAL_PRESAGG_2023_VF_Engl.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2023_COMMUNIQUE-FINAL_PRESAGG_2023_VF_Engl.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9792,7 +9861,8 @@
   "year": 2024,
   "lang": "en",
   "size_kb": 1725,
-  "thumb": "thumbs/agrhymet_presagg_2024_COMMUNIQUE-FINAL_PRESAGG_2024_EN.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2024_COMMUNIQUE-FINAL_PRESAGG_2024_EN.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2024_COMMUNIQUE-FINAL_PRESAGG_2024_EN.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9806,7 +9876,8 @@
   "year": 2024,
   "lang": "fr",
   "size_kb": 1773,
-  "thumb": "thumbs/agrhymet_presagg_2024_COMMUNIQUE-FINAL_PRESAGG_2024_FR.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2024_COMMUNIQUE-FINAL_PRESAGG_2024_FR.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2024_COMMUNIQUE-FINAL_PRESAGG_2024_FR.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9820,7 +9891,8 @@
   "year": 2024,
   "lang": "en",
   "size_kb": 687,
-  "thumb": "thumbs/agrhymet_presagg_2024_Draft_bulletinPRESAGG23_V1_EN.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2024_Draft_bulletinPRESAGG23_V1_EN.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2024_Draft_bulletinPRESAGG23_V1_EN.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9834,7 +9906,8 @@
   "year": 2024,
   "lang": "fr",
   "size_kb": 701,
-  "thumb": "thumbs/agrhymet_presagg_2024_Draft_bulletinPRESAGG23_V1_FR.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2024_Draft_bulletinPRESAGG23_V1_FR.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2024_Draft_bulletinPRESAGG23_V1_FR.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9876,7 +9949,8 @@
   "year": 2025,
   "lang": "en",
   "size_kb": 1124,
-  "thumb": "thumbs/agrhymet_presagg_2025_Draft_bulletinPRESAGG2025_En.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2025_Draft_bulletinPRESAGG2025_En.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2025_Draft_bulletinPRESAGG2025_En.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9890,7 +9964,8 @@
   "year": 2025,
   "lang": "fr",
   "size_kb": 1259,
-  "thumb": "thumbs/agrhymet_presagg_2025_Draft_bulletinPRESAGG2025_Fr.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2025_Draft_bulletinPRESAGG2025_Fr.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2025_Draft_bulletinPRESAGG2025_Fr.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9904,7 +9979,8 @@
   "year": 2025,
   "lang": null,
   "size_kb": 1816,
-  "thumb": "thumbs/agrhymet_presagg_2025_Presentation-PRESAGG_2025_forum.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2025_Presentation-PRESAGG_2025_forum.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2025_Presentation-PRESAGG_2025_forum.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9918,7 +9994,8 @@
   "year": 2026,
   "lang": "fr",
   "size_kb": 1839,
-  "thumb": "thumbs/agrhymet_presagg_2026_COMMUNIQUE_FINAL_PRESAGG_2026_VF_Ok-1.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2026_COMMUNIQUE_FINAL_PRESAGG_2026_VF_Ok-1.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2026_COMMUNIQUE_FINAL_PRESAGG_2026_VF_Ok-1.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9932,7 +10009,8 @@
   "year": 2026,
   "lang": "en",
   "size_kb": 1315,
-  "thumb": "thumbs/agrhymet_presagg_2026_COMMUNIQUE_FINAL_PRESAGG_2026_VF_Ok_En_02032026.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2026_COMMUNIQUE_FINAL_PRESAGG_2026_VF_Ok_En_02032026.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2026_COMMUNIQUE_FINAL_PRESAGG_2026_VF_Ok_En_02032026.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9946,7 +10024,8 @@
   "year": 2026,
   "lang": "en",
   "size_kb": 1802,
-  "thumb": "thumbs/agrhymet_presagg_2026_bulletinPRESAGG2026_En.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2026_bulletinPRESAGG2026_En.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2026_bulletinPRESAGG2026_En.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -9960,7 +10039,8 @@
   "year": 2026,
   "lang": "fr",
   "size_kb": 1918,
-  "thumb": "thumbs/agrhymet_presagg_2026_bulletinPRESAGG2026_Fr.pdf.png"
+  "thumb": "thumbs/agrhymet_presagg_2026_bulletinPRESAGG2026_Fr.pdf.png",
+  "map_candidate": "maps/agrhymet_presagg_2026_bulletinPRESAGG2026_Fr.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10008,7 +10088,8 @@
   "year": 2018,
   "lang": null,
   "size_kb": 1644,
-  "thumb": "thumbs/agrhymet_presass_2018_Bulletin_PRESASS-2018.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2018_Bulletin_PRESASS-2018.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2018_Bulletin_PRESASS-2018.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10024,7 +10105,8 @@
   "year": 2020,
   "lang": "fr",
   "size_kb": 1442,
-  "thumb": "thumbs/agrhymet_presass_2020_COMMUNIQUE_FINAL_PRESASS_2020_FRA.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2020_COMMUNIQUE_FINAL_PRESASS_2020_FRA.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2020_COMMUNIQUE_FINAL_PRESASS_2020_FRA.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10040,7 +10122,8 @@
   "year": 2021,
   "lang": null,
   "size_kb": 1468,
-  "thumb": "thumbs/agrhymet_presass_2021_Bulletin_PRESASS21_news.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2021_Bulletin_PRESASS21_news.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2021_Bulletin_PRESASS21_news.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10056,7 +10139,8 @@
   "year": 2022,
   "lang": null,
   "size_kb": 1024,
-  "thumb": "thumbs/agrhymet_presass_2022_COMMUNIQUE_FINAL_FORUM-PRESAS_2022.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2022_COMMUNIQUE_FINAL_FORUM-PRESAS_2022.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2022_COMMUNIQUE_FINAL_FORUM-PRESAS_2022.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10070,7 +10154,8 @@
   "year": 2023,
   "lang": "en",
   "size_kb": 4505,
-  "thumb": "thumbs/agrhymet_presass_2023_Bulletin_PRESASS_2023EN.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2023_Bulletin_PRESASS_2023EN.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2023_Bulletin_PRESASS_2023EN.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10084,7 +10169,8 @@
   "year": 2023,
   "lang": null,
   "size_kb": 5640,
-  "thumb": "thumbs/agrhymet_presass_2023_Bulletin_PRESASS_2023FR.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2023_Bulletin_PRESASS_2023FR.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2023_Bulletin_PRESASS_2023FR.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10098,7 +10184,8 @@
   "year": 2024,
   "lang": "en",
   "size_kb": 1115,
-  "thumb": "thumbs/agrhymet_presass_2024_BulletinPRESASS2024_EN-1.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2024_BulletinPRESASS2024_EN-1.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2024_BulletinPRESASS2024_EN-1.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10112,7 +10199,8 @@
   "year": 2024,
   "lang": "fr",
   "size_kb": 1076,
-  "thumb": "thumbs/agrhymet_presass_2024_BulletinPRESASS2024_FR.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2024_BulletinPRESASS2024_FR.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2024_BulletinPRESASS2024_FR.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10126,7 +10214,8 @@
   "year": 2024,
   "lang": "fr",
   "size_kb": 1234,
-  "thumb": "thumbs/agrhymet_presass_2024_BulletinPRESASS2024_MJ_7_FR-1.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2024_BulletinPRESASS2024_MJ_7_FR-1.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2024_BulletinPRESASS2024_MJ_7_FR-1.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10140,7 +10229,8 @@
   "year": 2024,
   "lang": "en",
   "size_kb": 2140,
-  "thumb": "thumbs/agrhymet_presass_2024_COMMUNIQUE-FINAL_PRESASS_2024_EN_VF.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2024_COMMUNIQUE-FINAL_PRESASS_2024_EN_VF.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2024_COMMUNIQUE-FINAL_PRESASS_2024_EN_VF.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10154,7 +10244,8 @@
   "year": 2024,
   "lang": "fr",
   "size_kb": 2157,
-  "thumb": "thumbs/agrhymet_presass_2024_COMMUNIQUE-FINAL_PRESASS_2024_FR_VF.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2024_COMMUNIQUE-FINAL_PRESASS_2024_FR_VF.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2024_COMMUNIQUE-FINAL_PRESASS_2024_FR_VF.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10168,7 +10259,8 @@
   "year": 2024,
   "lang": null,
   "size_kb": 1451,
-  "thumb": "thumbs/agrhymet_presass_2024_photodoc_forum_PRESASS_2024-1.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2024_photodoc_forum_PRESASS_2024-1.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2024_photodoc_forum_PRESASS_2024-1.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10196,7 +10288,8 @@
   "year": 2025,
   "lang": "en",
   "size_kb": 5384,
-  "thumb": "thumbs/agrhymet_presass_2025_Bulletin_PRESASS042025_En-1.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2025_Bulletin_PRESASS042025_En-1.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2025_Bulletin_PRESASS042025_En-1.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10210,7 +10303,8 @@
   "year": 2025,
   "lang": "en",
   "size_kb": 5384,
-  "thumb": "thumbs/agrhymet_presass_2025_Bulletin_PRESASS042025_En.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2025_Bulletin_PRESASS042025_En.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2025_Bulletin_PRESASS042025_En.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10224,7 +10318,8 @@
   "year": 2025,
   "lang": "fr",
   "size_kb": 1339,
-  "thumb": "thumbs/agrhymet_presass_2025_Bulletin_PRESASS042025_Fr.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2025_Bulletin_PRESASS042025_Fr.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2025_Bulletin_PRESASS042025_Fr.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10238,7 +10333,8 @@
   "year": 2025,
   "lang": "en",
   "size_kb": 913,
-  "thumb": "thumbs/agrhymet_presass_2025_COMMUNIQUE-FINAL_PRESASS_Bamako_2025_EN.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2025_COMMUNIQUE-FINAL_PRESASS_Bamako_2025_EN.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2025_COMMUNIQUE-FINAL_PRESASS_Bamako_2025_EN.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10252,7 +10348,8 @@
   "year": 2025,
   "lang": "fr",
   "size_kb": 4966,
-  "thumb": "thumbs/agrhymet_presass_2025_COMMUNIQUE-FINAL_PRESASS_Bamako_2025_VF.pdf.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2025_COMMUNIQUE-FINAL_PRESASS_Bamako_2025_VF.pdf.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2025_COMMUNIQUE-FINAL_PRESASS_Bamako_2025_VF.pdf.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10266,7 +10363,8 @@
   "year": 2026,
   "lang": "en",
   "size_kb": 2391,
-  "thumb": "thumbs/agrhymet_presass_2026_BulletinPRESASS2026_En.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2026_BulletinPRESASS2026_En.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2026_BulletinPRESASS2026_En.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10280,7 +10378,8 @@
   "year": 2026,
   "lang": "fr",
   "size_kb": 2417,
-  "thumb": "thumbs/agrhymet_presass_2026_BulletinPRESASS2026_Fr.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2026_BulletinPRESASS2026_Fr.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2026_BulletinPRESASS2026_Fr.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10294,7 +10393,8 @@
   "year": 2026,
   "lang": "en",
   "size_kb": 1643,
-  "thumb": "thumbs/agrhymet_presass_2026_COMMUNIQUE-FINAL_PRESASS_Ndjamena_2026_EN.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2026_COMMUNIQUE-FINAL_PRESASS_Ndjamena_2026_EN.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2026_COMMUNIQUE-FINAL_PRESASS_Ndjamena_2026_EN.pdf_map.png"
  },
  {
   "org": "agrhymet",
@@ -10308,7 +10408,8 @@
   "year": 2026,
   "lang": "fr",
   "size_kb": 2051,
-  "thumb": "thumbs/agrhymet_presass_2026_COMMUNIQUE-FINAL_PRESASS_Ndjamena_2026_VF.pdf.png"
+  "thumb": "thumbs/agrhymet_presass_2026_COMMUNIQUE-FINAL_PRESASS_Ndjamena_2026_VF.pdf.png",
+  "map_candidate": "maps/agrhymet_presass_2026_COMMUNIQUE-FINAL_PRESASS_Ndjamena_2026_VF.pdf_map.png"
  },
  {
   "org": "agrhymet",

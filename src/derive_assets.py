@@ -115,6 +115,30 @@ def slug(path: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", s)
 
 
+def pdf_map_candidate(src: Path, dest: Path, min_w: int = 450, min_h: int = 320) -> bool:
+    """Extract the largest embedded raster from a PDF — usually the forecast map
+    in RCOF communiqués/bulletins. Skips logos/small figures via the size floor."""
+    try:
+        best = None
+        with fitz.open(src) as doc:
+            for page in doc:
+                for info in page.get_images(full=True):
+                    xref, w, h = info[0], info[2], info[3]
+                    if w >= min_w and h >= min_h and (best is None or w * h > best[1] * best[2]):
+                        best = (xref, w, h)
+            if best is None:
+                return False
+            pix = fitz.Pixmap(doc, best[0])
+            if pix.n - pix.alpha > 3:
+                pix = fitz.Pixmap(fitz.csRGB, pix)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            pix.save(dest)
+        return True
+    except Exception as e:
+        logger.warning(f"map extract failed {src.name}: {e}")
+        return False
+
+
 def pdf_thumb(src: Path, dest: Path, width: int = 700) -> bool:
     try:
         with fitz.open(src) as doc:
@@ -160,6 +184,9 @@ if __name__ == "__main__":
             thumb = DOCS / "thumbs" / (stem + ".png")
             if pdf_thumb(src, thumb):
                 rec["thumb"] = str(thumb.relative_to(DOCS))
+            mapimg = DOCS / "maps" / (stem + "_map.png")
+            if pdf_map_candidate(src, mapimg):
+                rec["map_candidate"] = str(mapimg.relative_to(DOCS))
         elif rec["kind"] == "map-image":
             img = DOCS / "img" / (Path(stem).stem + ".jpg")
             if img_copy(src, img):
