@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>African Regional Seasonal Forecasts — ACMAD &amp; AGRHYMET</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --acmad: #2a78d6;
+    --agrhymet: #eb6834;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+      --acmad: #3987e5;
+      --agrhymet: #d95926;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --border: rgba(255,255,255,0.10);
+    --acmad: #3987e5;
+    --agrhymet: #d95926;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15px; line-height: 1.45;
+  }
+  header { padding: 28px 24px 10px; max-width: 1280px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .sub { color: var(--ink-2); max-width: 860px; margin: 0; }
+  main { max-width: 1280px; margin: 0 auto; padding: 12px 24px 60px; }
+
+  .filters {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    position: sticky; top: 0; background: var(--page); padding: 12px 0;
+    border-bottom: 1px solid var(--grid); z-index: 5;
+  }
+  .filters select, .filters input[type=search] {
+    background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 13px;
+  }
+  .orgbtn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--ink-2);
+    border-radius: 999px; padding: 5px 14px 5px 10px; font: inherit; font-size: 13px;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+  }
+  .orgbtn .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .orgbtn[aria-pressed="true"] { color: var(--ink); border-color: currentColor; }
+  .count { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+  h2 { font-size: 15px; color: var(--ink-2); margin: 26px 0 10px; font-weight: 600; }
+  .matrix-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  table.matrix { border-collapse: collapse; min-width: 640px; width: 100%; }
+  .matrix th, .matrix td { font-size: 12px; padding: 3px 6px; text-align: center; }
+  .matrix th { color: var(--muted); font-weight: 500; }
+  .matrix td.rowhead { text-align: left; white-space: nowrap; color: var(--ink-2); padding-right: 12px; }
+  .matrix .cell { border-radius: 4px; height: 20px; min-width: 34px; position: relative; }
+  .matrix .cell span { font-size: 11px; color: var(--ink); opacity: 0.85; }
+  .matrix-note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .card .imgbox { aspect-ratio: 4/3; background: var(--grid); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
+  .card .imgbox img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+  .card .imgbox .noimg { color: var(--muted); font-size: 26px; }
+  .card .body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .badges { display: flex; flex-wrap: wrap; gap: 5px; }
+  .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--ink-2); display: inline-flex; align-items: center; gap: 5px;
+  }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .fname { font-size: 12.5px; color: var(--ink); word-break: break-all; }
+  .meta { font-size: 11.5px; color: var(--muted); margin-top: auto; }
+  .links { display: flex; gap: 10px; font-size: 12.5px; }
+  .links a { color: var(--acmad); text-decoration: none; }
+  .links a:hover { text-decoration: underline; }
+
+  dialog { border: none; border-radius: 12px; padding: 0; max-width: min(92vw, 1100px); background: var(--surface); }
+  dialog img { max-width: 100%; max-height: 82vh; display: block; }
+  dialog .cap { padding: 10px 14px; font-size: 13px; color: var(--ink-2); }
+  dialog::backdrop { background: rgba(0,0,0,0.6); }
+  .themetoggle { float: right; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--ink-2); padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+  .more { margin: 18px auto 0; display: block; border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 8px 22px; font: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+<header>
+  <button class="themetoggle" id="themetoggle">◐ theme</button>
+  <h1>African Regional Seasonal Forecasts</h1>
+  <p class="sub">
+    Archive of seasonal forecast products from <strong>ACMAD</strong> (continental Long-Range
+    Forecasts, ACCOF statements, RCOF outputs) and <strong>AGRHYMET</strong> (PRESASS &amp;
+    PRESAGG forums), assembled to compare regional consensus products against global
+    forecasts such as ECMWF SEAS5. Sources: ACMAD THREDDS server, agrhymet.cilss.int,
+    the Wayback Machine, and the WAS-NextGen digitized dataset
+    (<a href="https://doi.org/10.5281/zenodo.18936657">Zenodo, CC-BY 4.0</a>).
+  </p>
+</header>
+<main>
+  <div class="filters" id="filters">
+    <button class="orgbtn" data-org="acmad" aria-pressed="true"><span class="dot" style="background:var(--acmad)"></span>ACMAD</button>
+    <button class="orgbtn" data-org="agrhymet" aria-pressed="true"><span class="dot" style="background:var(--agrhymet)"></span>AGRHYMET</button>
+    <select id="f-product"><option value="">All products</option></select>
+    <select id="f-year"><option value="">All years</option></select>
+    <select id="f-season"><option value="">All seasons</option></select>
+    <select id="f-kind"><option value="">All formats</option></select>
+    <select id="f-lang"><option value="">Any language</option><option value="en">English</option><option value="fr">French</option></select>
+    <input type="search" id="f-search" placeholder="Search filenames…">
+    <span class="count" id="count"></span>
+  </div>
+
+  <h2>Issues per calendar month — when each product appears</h2>
+  <div class="matrix-wrap"><table class="matrix" id="matrix"></table>
+  <p class="matrix-note">Cell = number of archived files whose issue date falls in that month (AGRHYMET forum products) or whose folder month is known (ACMAD LRF). Products without parseable issue months are excluded from this view but appear in the gallery below.</p></div>
+
+  <h2>Gallery</h2>
+  <div class="cards" id="cards"></div>
+  <button class="more" id="more" hidden>Show more</button>
+</main>
+<dialog id="lightbox"><img id="lb-img" alt=""><div class="cap" id="lb-cap"></div></dialog>
+<script>
+const PRODUCT_LABELS = {
+  "lrf": "Long-Range Forecast", "lrf-policy-brief": "LRF Policy Brief",
+  "lrf-technical-note": "LRF Technical Note", "accof": "ACCOF",
+  "presass": "PRESASS", "presagg": "PRESAGG", "presac": "PRESAC",
+  "medcof": "MEDCOF", "swiocof": "SWIOCOF", "sarcof": "SARCOF",
+  "presass-digitized": "PRESASS digitized (NetCDF)",
+};
+const KIND_LABELS = {
+  "map-image": "Forecast map", "communique": "Communiqué", "bulletin": "Bulletin",
+  "statement": "Statement", "shapefile": "Shapefile", "geojson": "GeoJSON",
+  "netcdf": "NetCDF", "document": "Document", "other": "Other",
+};
+const state = { orgs: new Set(["acmad", "agrhymet"]), product: "", year: "", season: "", kind: "", lang: "", q: "", shown: 60 };
+let CAT = [];
+
+function monthOf(r) {
+  if (r.issued && /^\d{4}-\d{2}/.test(r.issued)) return +r.issued.slice(5, 7);
+  const m = r.path.match(/\/(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\//i);
+  if (m) return "janfebmaraprmayjunjulaugsepoctnovdec".indexOf(m[1].slice(0,3).toLowerCase())/3 + 1;
+  const d = r.path.match(/\/(20[0-3]\d)(0[1-9]|1[0-2])\//);
+  if (d) return +d[2];
+  return null;
+}
+
+function passes(r) {
+  if (!state.orgs.has(r.org)) return false;
+  if (state.product && r.product !== state.product) return false;
+  if (state.year && String(r.year) !== state.year) return false;
+  if (state.season && r.season !== state.season) return false;
+  if (state.kind && r.kind !== state.kind) return false;
+  if (state.lang && r.lang !== state.lang) return false;
+  if (state.q && !r.name.toLowerCase().includes(state.q) && !r.path.toLowerCase().includes(state.q)) return false;
+  return true;
+}
+
+function fillSelect(id, values, labels) {
+  const sel = document.getElementById(id);
+  const cur = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  for (const v of values) {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = labels ? (labels[v] || v) : v;
+    sel.append(o);
+  }
+  sel.value = cur;
+}
+
+function renderMatrix(rows) {
+  const products = [...new Set(rows.map(r => r.product))];
+  const tbl = document.getElementById("matrix");
+  const months = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+  let html = "<tr><th></th>" + months.map(m => `<th>${m}</th>`).join("") + "</tr>";
+  for (const p of products) {
+    const counts = Array(12).fill(0);
+    let any = false;
+    for (const r of rows) {
+      if (r.product !== p) continue;
+      const m = monthOf(r);
+      if (m) { counts[m-1]++; any = true; }
+    }
+    if (!any) continue;
+    const org = rows.find(r => r.product === p).org;
+    const max = Math.max(...counts);
+    html += `<tr><td class="rowhead">${PRODUCT_LABELS[p] || p}</td>` + counts.map(c => {
+      const alpha = c ? 0.25 + 0.75 * (c / max) : 0;
+      return `<td><div class="cell" title="${c} file(s)" style="background:${c ? `color-mix(in srgb, var(--${org}) ${Math.round(alpha*100)}%, transparent)` : "transparent"}">${c ? `<span>${c}</span>` : ""}</div></td>`;
+    }).join("") + "</tr>";
+  }
+  tbl.innerHTML = html;
+}
+
+function card(r) {
+  const el = document.createElement("div");
+  el.className = "card";
+  const img = r.image || r.thumb;
+  const view = img ? `<div class="imgbox" data-full="${r.image || ""}" data-name="${r.name}"><img loading="lazy" src="${img}" alt="${r.name}"></div>`
+                   : `<div class="imgbox"><div class="noimg">${r.kind === "netcdf" ? "▤" : r.kind === "shapefile" || r.kind === "geojson" ? "▦" : "📄"}</div></div>`;
+  el.innerHTML = view + `
+    <div class="body">
+      <div class="badges">
+        <span class="badge"><span class="dot" style="background:var(--${r.org})"></span>${r.org.toUpperCase()}</span>
+        <span class="badge">${PRODUCT_LABELS[r.product] || r.product}</span>
+        ${r.year ? `<span class="badge">${r.year}</span>` : ""}
+        ${r.season ? `<span class="badge">${r.season}</span>` : ""}
+        ${r.lang ? `<span class="badge">${r.lang.toUpperCase()}</span>` : ""}
+        <span class="badge">${KIND_LABELS[r.kind] || r.kind}</span>
+      </div>
+      <div class="fname">${r.name}</div>
+      <div class="meta">${r.size_kb ? (r.size_kb > 1024 ? (r.size_kb/1024).toFixed(1) + " MB" : r.size_kb + " KB") : ""}</div>
+      <div class="links"><a href="${r.source_url}" target="_blank" rel="noopener">source ↗</a></div>
+    </div>`;
+  const box = el.querySelector(".imgbox[data-full]");
+  if (box) box.addEventListener("click", () => {
+    if (box.dataset.full) {
+      document.getElementById("lb-img").src = box.dataset.full;
+      document.getElementById("lb-cap").textContent = box.dataset.name;
+      document.getElementById("lightbox").showModal();
+    } else {
+      window.open(r.source_url, "_blank");
+    }
+  });
+  return el;
+}
+
+function render() {
+  const rows = CAT.filter(passes);
+  document.getElementById("count").textContent = `${rows.length} / ${CAT.length} files`;
+  renderMatrix(rows);
+  const cards = document.getElementById("cards");
+  cards.innerHTML = "";
+  // images first, then PDFs, newest first
+  const order = { "map-image": 0, "communique": 1, "bulletin": 1, "statement": 1, "geojson": 2, "netcdf": 2, "shapefile": 3 };
+  rows.sort((a, b) => (order[a.kind] ?? 4) - (order[b.kind] ?? 4) || (b.year || 0) - (a.year || 0));
+  rows.slice(0, state.shown).forEach(r => cards.append(card(r)));
+  document.getElementById("more").hidden = rows.length <= state.shown;
+}
+
+fetch("catalog.json").then(r => r.json()).then(data => {
+  // hide shapefile sidecars (keep .shp as the representative)
+  CAT = data.filter(r => !/\.(dbf|shx|prj|cpg|qmd|sbn|sbx|xml|qpj|qpt|qml|lyr)$/i.test(r.name));
+  fillSelect("f-product", [...new Set(CAT.map(r => r.product))].sort(), PRODUCT_LABELS);
+  fillSelect("f-year", [...new Set(CAT.map(r => r.year).filter(Boolean))].sort((a,b)=>b-a).map(String));
+  fillSelect("f-season", [...new Set(CAT.map(r => r.season).filter(Boolean))].sort());
+  fillSelect("f-kind", [...new Set(CAT.map(r => r.kind))].sort(), KIND_LABELS);
+  render();
+});
+
+document.querySelectorAll(".orgbtn").forEach(b => b.addEventListener("click", () => {
+  const org = b.dataset.org;
+  if (state.orgs.has(org) && state.orgs.size > 1) state.orgs.delete(org);
+  else state.orgs.add(org);
+  b.setAttribute("aria-pressed", state.orgs.has(org));
+  state.shown = 60; render();
+}));
+for (const [id, key] of [["f-product","product"],["f-year","year"],["f-season","season"],["f-kind","kind"],["f-lang","lang"]]) {
+  document.getElementById(id).addEventListener("change", e => { state[key] = e.target.value; state.shown = 60; render(); });
+}
+document.getElementById("f-search").addEventListener("input", e => { state.q = e.target.value.toLowerCase(); state.shown = 60; render(); });
+document.getElementById("more").addEventListener("click", () => { state.shown += 120; render(); });
+document.getElementById("lightbox").addEventListener("click", e => { if (e.target.tagName !== "IMG") e.currentTarget.close(); });
+document.getElementById("themetoggle").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme === "dark" || (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  root.dataset.theme = dark ? "light" : "dark";
+});
+</script>
+</body>
+</html>

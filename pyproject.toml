@@ -1,0 +1,11 @@
+[project]
+name = "ds-regional-forecasts"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "ocha-stratus>=0.1.8",
+    "pillow>=12.3.0",
+    "pymupdf>=1.28.0",
+    "requests>=2.34.2",
+]
