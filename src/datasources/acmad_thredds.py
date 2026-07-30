@@ -22,9 +22,15 @@ NS = {"t": "http://www.unidata.ucar.edu/namespaces/thredds/InvCatalog/v1.0"}
 # vary per issue (TREND_BOB, profile_FMAM, ANALOG YEAR, ...). Skip by pattern.
 SKIP_DIR_RE = re.compile(
     r"(?i)^(analog|predictor|trend|profile|annual|obs|observ|verif|cpt|model|"
-    r"hindcast|training|data.?prep|rain.?review|composite|txt|grads|script)",
+    r"hindcast|training|data.?prep|rain.?review|composite|txt|grads|script|"
+    r"lrf_products_package|shp_afrique|percentile|graphs|development|documentation|"
+    r"data$|"  # every folder literally named "Data" has been model inputs, not products
+    r"cpc.?fcst|sst_vs|nmme|season\d|x-trop|.*_profiles?$)",
 )
-SKIP_SUFFIXES = {".ctl", ".gs", ".dat", ".bin", ".exe", ".rar", ".grd", ".gra", ".csv", ".txt"}
+SKIP_SUFFIXES = {
+    ".ctl", ".gs", ".dat", ".bin", ".exe", ".rar", ".grd", ".gra", ".csv", ".txt",
+    ".tmp", ".filepart", ".db", ".ini",
+}
 MAX_FILE_MB = 200
 
 

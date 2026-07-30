@@ -202,6 +202,35 @@ const KIND_LABELS = {
 const state = { orgs: new Set(["acmad", "agrhymet"]), product: "", year: "", season: "", kind: "", lang: "", q: "", shown: 60 };
 let CAT = [];
 
+// ---------- blob-served assets via the team token issuer ----------
+// Derived images live in blob (ds-regional-forecasts/processed/site-assets/...);
+// the issuer mints a short-lived read-only SAS per folder. Falls back to
+// repo-relative paths if the issuer is unreachable.
+const ISSUER = "https://chd-ds-token-issuer.azurewebsites.net/api/token?app=regional-forecasts&tier=";
+const tokens = { assets: null, raw: null };
+
+async function fetchToken(tier) {
+  try {
+    const r = await fetch(ISSUER + tier);
+    if (!r.ok) return null;
+    const t = await r.json();
+    return t.sas ? t : null;
+  } catch { return null; }
+}
+
+function encPath(rel) {
+  return rel.split("/").map(encodeURIComponent).join("/");
+}
+function assetUrl(rel) {
+  if (!rel) return rel;
+  const t = tokens.assets;
+  return t ? `${t.base_url}/${t.platinum_dir}/${encPath(rel)}?${t.sas}` : rel;
+}
+function rawUrl(path) {
+  const t = tokens.raw;
+  return t ? `${t.base_url}/${t.platinum_dir}/${encPath(path)}?${t.sas}` : null;
+}
+
 function monthOf(r) {
   if (r.issued && /^\d{4}-\d{2}/.test(r.issued)) return +r.issued.slice(5, 7);
   const m = r.path.match(/\/(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\//i);
@@ -261,8 +290,8 @@ function renderMatrix(rows) {
 function card(r) {
   const el = document.createElement("div");
   el.className = "card";
-  const img = r.image || r.thumb;
-  const view = img ? `<div class="imgbox" data-full="${r.image || ""}" data-name="${r.name}"><img loading="lazy" src="${img}" alt="${r.name}"></div>`
+  const img = assetUrl(r.image || r.thumb);
+  const view = img ? `<div class="imgbox" data-full="${r.image ? assetUrl(r.image) : ""}" data-name="${r.name}"><img loading="lazy" src="${img}" alt="${r.name}"></div>`
                    : `<div class="imgbox"><div class="noimg">${r.kind === "netcdf" ? "▤" : r.kind === "shapefile" || r.kind === "geojson" ? "▦" : "📄"}</div></div>`;
   el.innerHTML = view + `
     <div class="body">
@@ -276,7 +305,7 @@ function card(r) {
       </div>
       <div class="fname">${r.name}</div>
       <div class="meta">${r.size_kb ? (r.size_kb > 1024 ? (r.size_kb/1024).toFixed(1) + " MB" : r.size_kb + " KB") : ""}</div>
-      <div class="links"><a href="${r.source_url}" target="_blank" rel="noopener">source ↗</a></div>
+      <div class="links"><a href="${r.source_url}" target="_blank" rel="noopener">source ↗</a>${rawUrl(r.path) ? ` <a href="${rawUrl(r.path)}" target="_blank" rel="noopener">original ⬇</a>` : ""}</div>
     </div>`;
   const box = el.querySelector(".imgbox[data-full]");
   if (box) box.addEventListener("click", () => {
@@ -304,7 +333,10 @@ function render() {
   document.getElementById("more").hidden = rows.length <= state.shown;
 }
 
-fetch("catalog.json").then(r => r.json()).then(data => {
+Promise.all([fetchToken("assets"), fetchToken("raw")]).then(([a, w]) => {
+  tokens.assets = a; tokens.raw = w;
+  return fetch("catalog.json").then(r => r.json());
+}).then(data => {
   // hide shapefile sidecars (keep .shp as the representative)
   CAT = data.filter(r => !/\.(dbf|shx|prj|cpg|qmd|sbn|sbx|xml|qpj|qpt|qml|lyr)$/i.test(r.name));
   fillSelect("f-product", [...new Set(CAT.map(r => r.product))].sort(), PRODUCT_LABELS);
@@ -384,9 +416,9 @@ function renderViewer() {
 
   const r = rows[vstate.idx];
   document.getElementById("v-stage").innerHTML = `
-    <img src="${bestImg(r)}" alt="${r.name}">
+    <img src="${assetUrl(bestImg(r))}" alt="${r.name}">
     <div class="cap">${PRODUCT_LABELS[r.product] || r.product} · ${r.year}${r.season ? " · " + r.season : ""}${variableOf(r) ? " · " + variableOf(r) : ""}
-      · ${r.name} · <a href="${r.source_url}" target="_blank" rel="noopener">source ↗</a>${r.map_candidate && !r.image ? " · map extracted from PDF" : ""}</div>`;
+      · ${r.name} · <a href="${r.source_url}" target="_blank" rel="noopener">source ↗</a>${rawUrl(r.path) ? ` · <a href="${rawUrl(r.path)}" target="_blank" rel="noopener">original ⬇</a>` : ""}${r.map_candidate && !r.image ? " · map extracted from PDF" : ""}</div>`;
 }
 
 function initViewer() {

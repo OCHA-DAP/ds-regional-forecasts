@@ -3,3 +3,7 @@ data/
 __pycache__/
 *.pyc
 .DS_Store
+docs/img/
+docs/maps/
+docs/thumbs/
+docs/geo/
