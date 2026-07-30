@@ -49,3 +49,15 @@ built to show what regional consensus products exist alongside global forecasts
 - Longer digitized records (PRESAO/PRESASS 1998–2024) exist but are unpublished:
   Pirret et al. 2020 (UK Met Office), Rauch et al. 2025 (Univ. Augsburg) — author
   contact required.
+
+## Asset serving (since 2026-07-30)
+
+The site serves ALL images and "original" downloads client-side from dev blob via the
+team token issuer (`chd-ds-token-issuer`, app id `regional-forecasts`, tiers
+`assets` -> `processed/site-assets`, `raw` -> `raw`). The repo carries only
+`docs/index.html` + `docs/catalog.json`; `docs/{img,maps,thumbs,geo}` are gitignored
+and mirrored to blob by `src/upload_blob.py`. If the issuer is unreachable the site
+falls back to repo-relative paths (i.e. images break but the catalog still browses).
+Local `data/raw/` is disposable — blob is authoritative; re-download with
+`src/run_grab.py` (resumable). RCOF conference decks (~259 files) deliberately not
+grabbed — only forum core products (statements/bulletins/maps).
