@@ -22,6 +22,7 @@ UPLOADS = [
     (ROOT / "docs" / "maps", "processed/site-assets/maps"),
     (ROOT / "docs" / "thumbs", "processed/site-assets/thumbs"),
     (ROOT / "docs" / "geo", "processed/site-assets/geo"),
+    (ROOT / "docs" / "data", "processed/site-assets/data"),
 ]
 
 if __name__ == "__main__":

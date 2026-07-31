@@ -130,6 +130,25 @@
   dialog .cap { padding: 10px 14px; font-size: 13px; color: var(--ink-2); }
   dialog::backdrop { background: rgba(0,0,0,0.6); }
   .themetoggle { float: right; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--ink-2); padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+
+  /* ---------- Data viewer ---------- */
+  .dmap { position: relative; width: 100%; aspect-ratio: 3 / 1; background: var(--page); border: 1px solid var(--grid); border-radius: 8px; overflow: hidden; }
+  .dmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #d-canvas { image-rendering: pixelated; }
+  #d-overlay { cursor: crosshair; }
+  .dtip {
+    position: absolute; pointer-events: none; background: var(--surface); color: var(--ink);
+    border: 1px solid var(--border); border-radius: 8px; padding: 5px 9px; font-size: 12px;
+    white-space: nowrap; box-shadow: 0 2px 10px rgba(0,0,0,0.25); z-index: 3;
+  }
+  .dlegend { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 12px; color: var(--ink-2); flex-wrap: wrap; }
+  .dlegend .bar { width: 220px; height: 10px; border-radius: 5px; border: 1px solid var(--border); }
+  .dlegend .chip { display: inline-flex; align-items: center; gap: 5px; }
+  .dlegend .chip i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dhist { margin-top: 12px; background: var(--page); border: 1px solid var(--grid); border-radius: 8px; padding: 10px 14px; }
+  .dhist .dh-head { display: flex; align-items: baseline; gap: 12px; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+  .dhist .dh-close { margin-left: auto; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--ink-2); cursor: pointer; font: inherit; font-size: 12px; padding: 2px 8px; }
+  .dhist svg text { fill: var(--ink-2); font-size: 10px; }
   .more { margin: 18px auto 0; display: block; border: 1px solid var(--border); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 8px 22px; font: inherit; cursor: pointer; }
 </style>
 </head>
@@ -150,7 +169,36 @@
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-gallery" aria-selected="true">Gallery</button>
     <button class="tab" role="tab" id="tab-viewer" aria-selected="false">Year viewer</button>
+    <button class="tab" role="tab" id="tab-data" aria-selected="false">Data viewer</button>
   </div>
+
+  <section id="view-data" class="viewer" hidden>
+    <div class="vfilters">
+      <select id="d-product"></select>
+      <select id="d-layer">
+        <option value="dom">Dominant tercile</option>
+        <option value="PB">P(below normal)</option>
+        <option value="PN">P(near normal)</option>
+        <option value="PA">P(above normal)</option>
+      </select>
+      <select id="d-view">
+        <option value="prob">Probability</option>
+        <option value="pct">Percentile vs history</option>
+      </select>
+      <span class="count" id="d-note"></span>
+    </div>
+    <div class="yearstrip" id="d-years"></div>
+    <div class="dmap" id="d-map">
+      <canvas id="d-canvas"></canvas>
+      <canvas id="d-overlay"></canvas>
+      <div class="dtip" id="d-tip" hidden></div>
+    </div>
+    <div class="dlegend" id="d-legend"></div>
+    <div class="dhist" id="d-hist" hidden></div>
+    <p class="vhint">JJAS rainfall tercile probabilities on the 0.1° digitization grid · hover for values ·
+      click a cell to pin its full forecast history · ←/→ step through years</p>
+    <p class="vhint" id="d-attrib"></p>
+  </section>
 
   <section id="view-viewer" class="viewer" hidden>
     <div class="vfilters">
@@ -438,20 +486,338 @@ document.getElementById("v-product").addEventListener("change", e => { vstate.pr
 document.getElementById("v-variable").addEventListener("change", e => { vstate.variable = e.target.value; vstate.idx = 0; renderViewer(); });
 document.getElementById("v-season").addEventListener("change", e => { vstate.season = e.target.value; vstate.idx = 0; renderViewer(); });
 
-function showTab(which) {
-  const viewer = which === "viewer";
-  document.getElementById("view-viewer").hidden = !viewer;
-  document.getElementById("view-gallery").hidden = viewer;
-  document.getElementById("tab-viewer").setAttribute("aria-selected", viewer);
-  document.getElementById("tab-gallery").setAttribute("aria-selected", !viewer);
-  if (viewer) initViewer();
+// ---------- Data viewer (gridded digitized forecasts) ----------
+// Data tiles are grayscale PNGs: pixel = probability * 200, 255 = nodata.
+// The browser reads values back off a canvas, so the same tiny asset drives
+// rendering, hover values, and the percentile-vs-own-history computation.
+const dstate = { product: "consensus", layer: "dom", view: "prob", yi: 0, pin: null };
+let DMANIFEST = null;
+const DTILES = {};   // product -> terc -> year -> Uint8Array(W*H)
+const DPCT = {};     // cache: "product|terc|year" -> Float32Array (NaN = nodata)
+let DOUTLINE = null; // array of line rings [[lon,lat],...]
+
+const RAMPS = { // light -> dark, single hue each (CVD-safe by construction)
+  PB: [[253,244,231],[224,143,51],[92,51,5]],
+  PN: [[244,244,242],[121,119,112],[40,39,36]],
+  PA: [[238,244,252],[91,156,224],[13,62,119]],
+};
+const DIVERGE = [[140,81,10],[216,179,101],[244,240,232],[90,180,172],[1,102,94]];
+const PROB_MAX = 0.8; // ramp domain top; higher values clamp
+const TERC_LABEL = { PB: "below normal", PN: "near normal", PA: "above normal" };
+
+function rampAt(stops, t) {
+  t = Math.max(0, Math.min(1, t));
+  const seg = t * (stops.length - 1), i = Math.min(Math.floor(seg), stops.length - 2), f = seg - i;
+  return [0,1,2].map(k => Math.round(stops[i][k] + f * (stops[i+1][k] - stops[i][k])));
 }
-document.getElementById("tab-gallery").addEventListener("click", () => showTab("gallery"));
-document.getElementById("tab-viewer").addEventListener("click", () => showTab("viewer"));
+const probColor = (terc, p) => rampAt(RAMPS[terc], p / PROB_MAX);
+const pctColor = p => rampAt(DIVERGE, p / 100);
+const cssRGB = c => `rgb(${c[0]},${c[1]},${c[2]})`;
+
+function loadTile(url, W, H) {
+  return new Promise((resolve, reject) => {
+    const im = new Image();
+    im.crossOrigin = "anonymous";
+    im.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = W; c.height = H;
+      const g = c.getContext("2d", { willReadFrequently: true });
+      g.drawImage(im, 0, 0);
+      const d = g.getImageData(0, 0, W, H).data;
+      const out = new Uint8Array(W * H);
+      for (let i = 0; i < out.length; i++) out[i] = d[i * 4];
+      resolve(out);
+    };
+    im.onerror = () => reject(new Error("tile " + url));
+    im.src = url;
+  });
+}
+
+async function ensureProduct(product) {
+  if (DTILES[product]) return;
+  const p = DMANIFEST.products[product];
+  document.getElementById("d-note").textContent = "loading tiles…";
+  const store = {};
+  await Promise.all(p.terciles.flatMap(t => p.years.map(async y => {
+    (store[t] ??= {})[y] = await loadTile(assetUrl(`data/${product}/${t}_${y}.png`), p.width, p.height);
+  })));
+  DTILES[product] = store;
+  document.getElementById("d-note").textContent = "";
+}
+
+// midrank percentile of this year's value within the pixel's own record
+function pctField(product, terc, year) {
+  const key = `${product}|${terc}|${year}`;
+  if (DPCT[key]) return DPCT[key];
+  const p = DMANIFEST.products[product], tiles = DTILES[product][terc];
+  const yrs = p.years, cur = tiles[year], n = p.width * p.height;
+  const out = new Float32Array(n).fill(NaN);
+  for (let i = 0; i < n; i++) {
+    const v = cur[i];
+    if (v === 255) continue;
+    let below = 0, equal = 0, count = 0;
+    for (const y of yrs) {
+      const w = tiles[y][i];
+      if (w === 255) continue;
+      count++;
+      if (w < v) below++; else if (w === v) equal++;
+    }
+    if (count >= 4) out[i] = 100 * (below + 0.5 * equal) / count;
+  }
+  DPCT[key] = out;
+  return out;
+}
+
+function renderDataCanvas() {
+  const p = DMANIFEST.products[dstate.product], tiles = DTILES[dstate.product];
+  const year = p.years[dstate.yi];
+  const cv = document.getElementById("d-canvas");
+  cv.width = p.width; cv.height = p.height;
+  const g = cv.getContext("2d");
+  const img = g.createImageData(p.width, p.height);
+  const n = p.width * p.height;
+  const put = (i, c, a) => { img.data[i*4] = c[0]; img.data[i*4+1] = c[1]; img.data[i*4+2] = c[2]; img.data[i*4+3] = a; };
+  if (dstate.layer === "dom") {
+    const pb = tiles.PB[year], pn = tiles.PN[year], pa = tiles.PA[year];
+    for (let i = 0; i < n; i++) {
+      if (pb[i] === 255 || pn[i] === 255 || pa[i] === 255) continue;
+      const vals = [pb[i], pn[i], pa[i]], mx = Math.max(...vals);
+      const terc = ["PB","PN","PA"][vals.indexOf(mx)];
+      put(i, probColor(terc, mx / 200), 255);
+    }
+  } else {
+    const view = dstate.view;
+    const field = view === "pct" ? pctField(dstate.product, dstate.layer, year) : tiles[dstate.layer][year];
+    for (let i = 0; i < n; i++) {
+      if (view === "pct") { if (!Number.isNaN(field[i])) put(i, pctColor(field[i]), 255); }
+      else if (field[i] !== 255) put(i, probColor(dstate.layer, field[i] / 200), 255);
+    }
+  }
+  g.putImageData(img, 0, 0);
+}
+
+function renderOutline() {
+  const ov = document.getElementById("d-overlay"), map = document.getElementById("d-map");
+  const dpr = window.devicePixelRatio || 1;
+  const w = map.clientWidth, h = map.clientHeight;
+  ov.width = w * dpr; ov.height = h * dpr;
+  if (!DOUTLINE) return;
+  const [x0, y0, x1, y1] = DMANIFEST.products[dstate.product].bbox;
+  const g = ov.getContext("2d");
+  g.scale(dpr, dpr);
+  g.strokeStyle = "rgba(128,128,128,0.85)";
+  g.lineWidth = 0.8;
+  g.beginPath();
+  for (const line of DOUTLINE) {
+    for (let i = 0; i < line.length; i++) {
+      const px = (line[i][0] - x0) / (x1 - x0) * w;
+      const py = (y1 - line[i][1]) / (y1 - y0) * h;
+      i ? g.lineTo(px, py) : g.moveTo(px, py);
+    }
+  }
+  g.stroke();
+}
+
+function renderLegend() {
+  const el = document.getElementById("d-legend");
+  const grad = (fn, lo, hi) => {
+    const stops = Array.from({length: 11}, (_, i) => `${cssRGB(fn(lo + (hi - lo) * i / 10))} ${i*10}%`);
+    return `<span class="bar" style="background:linear-gradient(90deg,${stops.join(",")})"></span>`;
+  };
+  if (dstate.layer === "dom") {
+    el.innerHTML = ["PB","PN","PA"].map(t =>
+      `<span class="chip"><i style="background:${cssRGB(probColor(t, 0.45))}"></i>${TERC_LABEL[t]} dominant</span>`
+    ).join("") + `<span>· darker = higher probability</span>`;
+  } else if (dstate.view === "pct") {
+    el.innerHTML = `<span>lowest in record</span>${grad(p => pctColor(p), 0, 100)}<span>highest in record</span>
+      <span>· percentile of P(${TERC_LABEL[dstate.layer]}) within this cell's own ${DMANIFEST.products[dstate.product].years.length}-year record</span>`;
+  } else {
+    el.innerHTML = `<span>0%</span>${grad(p => probColor(dstate.layer, p), 0, PROB_MAX)}<span>${Math.round(PROB_MAX*100)}%+</span>
+      <span>· P(${TERC_LABEL[dstate.layer]})</span>`;
+  }
+}
+
+function renderYearStrip() {
+  const p = DMANIFEST.products[dstate.product];
+  const strip = document.getElementById("d-years");
+  strip.innerHTML = "";
+  const nav = (txt, d) => {
+    const b = document.createElement("button");
+    b.className = "navbtn"; b.textContent = txt;
+    b.onclick = () => { dstate.yi = Math.max(0, Math.min(p.years.length - 1, dstate.yi + d)); renderData(); };
+    return b;
+  };
+  strip.append(nav("←", -1));
+  p.years.forEach((y, i) => {
+    const b = document.createElement("button");
+    b.className = "yearbtn";
+    b.setAttribute("aria-pressed", i === dstate.yi);
+    b.textContent = y;
+    b.onclick = () => { dstate.yi = i; renderData(); };
+    strip.append(b);
+  });
+  strip.append(nav("→", 1));
+}
+
+function cellAt(ev) {
+  const map = document.getElementById("d-map"), r = map.getBoundingClientRect();
+  const p = DMANIFEST.products[dstate.product];
+  const [x0, y0, x1, y1] = p.bbox;
+  const fx = (ev.clientX - r.left) / r.width, fy = (ev.clientY - r.top) / r.height;
+  const col = Math.floor(fx * p.width), row = Math.floor(fy * p.height);
+  if (col < 0 || col >= p.width || row < 0 || row >= p.height) return null;
+  return { col, row, i: row * p.width + col,
+           lon: x0 + fx * (x1 - x0), lat: y1 - fy * (y1 - y0) };
+}
+
+function cellValues(i, year) {
+  const tiles = DTILES[dstate.product];
+  const v = {};
+  for (const t of ["PB","PN","PA"]) v[t] = tiles[t][year][i] === 255 ? null : tiles[t][year][i] / 2; // %
+  return v;
+}
+
+function fmtCoord(lon, lat) {
+  return `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(1)}°${lon >= 0 ? "E" : "W"}`;
+}
+
+function renderPin() {
+  const el = document.getElementById("d-hist");
+  if (!dstate.pin) { el.hidden = true; return; }
+  const p = DMANIFEST.products[dstate.product], { i, lon, lat } = dstate.pin;
+  const bw = 30, gap = 10, hgt = 90, pad = 24;
+  let bars = "", any = false;
+  p.years.forEach((y, k) => {
+    const v = cellValues(i, y);
+    const x = pad + k * (bw + gap);
+    if (v.PB == null || v.PN == null || v.PA == null) {
+      bars += `<text x="${x + bw/2}" y="${hgt/2}" text-anchor="middle">–</text>`;
+    } else {
+      any = true;
+      const tot = v.PB + v.PN + v.PA;
+      let yy = 10 + hgt;
+      for (const t of ["PB","PN","PA"]) {
+        const h = hgt * v[t] / tot;
+        yy -= h;
+        bars += `<rect x="${x}" y="${yy}" width="${bw}" height="${Math.max(h-1,0)}" fill="${cssRGB(probColor(t, 0.45))}" rx="1"><title>${y} · P(${TERC_LABEL[t]}) ${v[t].toFixed(0)}%</title></rect>`;
+      }
+    }
+    if (k === dstate.yi) bars += `<rect x="${x-2.5}" y="7.5" width="${bw+5}" height="${hgt+5}" fill="none" stroke="var(--acmad)" stroke-width="1.5" rx="3"/>`;
+    bars += `<text x="${x + bw/2}" y="${hgt + 24}" text-anchor="middle">${y}</text>`;
+  });
+  const W = pad * 2 + p.years.length * (bw + gap) - gap;
+  const year = p.years[dstate.yi], v = cellValues(i, year);
+  const cur = v.PB == null ? "no forecast drawn here this year" :
+    `${year}: below ${v.PB.toFixed(0)}% · near ${v.PN.toFixed(0)}% · above ${v.PA.toFixed(0)}%`;
+  el.innerHTML = `<div class="dh-head"><strong>${fmtCoord(lon, lat)}</strong><span>${cur}</span>
+      <button class="dh-close" id="dh-close">✕ unpin</button></div>` +
+    (any ? `<svg width="${W}" height="${hgt + 32}" role="img" aria-label="tercile probabilities by year">${bars}</svg>`
+         : `<span class="vhint">no data at this cell in any year</span>`);
+  el.hidden = false;
+  document.getElementById("dh-close").onclick = () => { dstate.pin = null; renderPin(); };
+}
+
+function renderData() {
+  renderYearStrip();
+  renderDataCanvas();
+  renderOutline();
+  renderLegend();
+  renderPin();
+}
+
+async function initData() {
+  const note = document.getElementById("d-note");
+  if (!DMANIFEST) {
+    try {
+      DMANIFEST = await fetch(assetUrl("data/manifest.json")).then(r => { if (!r.ok) throw 0; return r.json(); });
+    } catch {
+      note.textContent = "data tiles unavailable (token issuer unreachable)";
+      return;
+    }
+    const sel = document.getElementById("d-product");
+    sel.innerHTML = Object.entries(DMANIFEST.products)
+      .map(([k, p]) => `<option value="${k}">${p.label}</option>`).join("");
+    sel.value = dstate.product;
+    fetch(assetUrl("data/outline.geojson")).then(r => r.json()).then(gj => {
+      DOUTLINE = gj.features.flatMap(f =>
+        f.geometry.type === "MultiLineString" ? f.geometry.coordinates :
+        f.geometry.type === "LineString" ? [f.geometry.coordinates] : []);
+      renderOutline();
+    }).catch(() => {});
+  }
+  const p = DMANIFEST.products[dstate.product];
+  dstate.yi = Math.min(dstate.yi, p.years.length - 1);
+  document.getElementById("d-attrib").textContent = `${p.note} Data: ${DMANIFEST.attribution}.`;
+  try { await ensureProduct(dstate.product); }
+  catch { note.textContent = "failed to load data tiles"; return; }
+  renderData();
+}
+
+document.getElementById("d-product").addEventListener("change", e => {
+  dstate.product = e.target.value; dstate.yi = 1e9; dstate.pin = null; initData();
+});
+document.getElementById("d-layer").addEventListener("change", e => {
+  dstate.layer = e.target.value;
+  const vsel = document.getElementById("d-view");
+  vsel.disabled = dstate.layer === "dom";
+  if (vsel.disabled) { vsel.value = "prob"; dstate.view = "prob"; }
+  renderData();
+});
+document.getElementById("d-view").addEventListener("change", e => { dstate.view = e.target.value; renderData(); });
+document.getElementById("d-view").disabled = true; // default layer is "dom"
+
+const dOverlay = document.getElementById("d-overlay");
+dOverlay.addEventListener("mousemove", ev => {
+  const tip = document.getElementById("d-tip");
+  if (!DMANIFEST || !DTILES[dstate.product]) return;
+  const c = cellAt(ev);
+  if (!c) { tip.hidden = true; return; }
+  const p = DMANIFEST.products[dstate.product], year = p.years[dstate.yi];
+  const v = cellValues(c.i, year);
+  if (v.PB == null && v.PN == null && v.PA == null) { tip.hidden = true; return; }
+  let txt = `${fmtCoord(c.lon, c.lat)} · below ${v.PB ?? "–"}% · near ${v.PN ?? "–"}% · above ${v.PA ?? "–"}%`;
+  if (dstate.layer !== "dom") {
+    const f = pctField(dstate.product, dstate.layer, year)[c.i];
+    if (!Number.isNaN(f)) txt += ` · P(${TERC_LABEL[dstate.layer]}) at ${Math.round(f)}th %ile of record`;
+  }
+  tip.textContent = txt;
+  tip.hidden = false;
+  const map = document.getElementById("d-map"), r = map.getBoundingClientRect();
+  const x = ev.clientX - r.left, y = ev.clientY - r.top;
+  tip.style.left = Math.min(x + 14, r.width - tip.offsetWidth - 6) + "px";
+  tip.style.top = Math.max(y - 34, 4) + "px";
+});
+dOverlay.addEventListener("mouseleave", () => { document.getElementById("d-tip").hidden = true; });
+dOverlay.addEventListener("click", ev => {
+  const c = cellAt(ev);
+  if (!c || !DTILES[dstate.product]) return;
+  dstate.pin = c;
+  renderPin();
+});
+new ResizeObserver(() => { if (!document.getElementById("view-data").hidden) renderOutline(); })
+  .observe(document.getElementById("d-map"));
+
+// ---------- tabs ----------
+const TAB_IDS = ["gallery", "viewer", "data"];
+function showTab(which) {
+  for (const t of TAB_IDS) {
+    document.getElementById("view-" + t).hidden = t !== which;
+    document.getElementById("tab-" + t).setAttribute("aria-selected", t === which);
+  }
+  if (which === "viewer") initViewer();
+  if (which === "data") initData();
+}
+TAB_IDS.forEach(t => document.getElementById("tab-" + t).addEventListener("click", () => showTab(t)));
 document.addEventListener("keydown", e => {
-  if (document.getElementById("view-viewer").hidden) return;
-  if (e.key === "ArrowLeft") { vstate.idx = Math.max(0, vstate.idx - 1); renderViewer(); }
-  if (e.key === "ArrowRight") { vstate.idx = vstate.idx + 1; renderViewer(); }
+  if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+  const d = e.key === "ArrowLeft" ? -1 : 1;
+  if (!document.getElementById("view-viewer").hidden) {
+    vstate.idx = Math.max(0, vstate.idx + d); renderViewer();
+  } else if (!document.getElementById("view-data").hidden && DMANIFEST && DTILES[dstate.product]) {
+    const nY = DMANIFEST.products[dstate.product].years.length;
+    dstate.yi = Math.max(0, Math.min(nY - 1, dstate.yi + d));
+    renderData();
+  }
 });
 
 document.getElementById("themetoggle").addEventListener("click", () => {
