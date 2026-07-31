@@ -11,8 +11,16 @@ built to show what regional consensus products exist alongside global forecasts
 2. `uv run python -m src.derive_assets` — classifies files, renders PDF page-1
    thumbnails to `docs/thumbs/`, resizes map images to `docs/img/`, copies small
    GeoJSONs to `docs/geo/`, writes `docs/catalog.json`
-3. `uv run python -m src.upload_blob` — mirrors `data/raw/` to blob at
-   `ds-regional-forecasts/raw/...` (dev account, via ocha-stratus)
+3. `uv run python -m src.derive_data_viewer` — packs the two Zenodo NetCDFs into
+   grayscale PNG **data tiles** (`docs/data/`, pixel = prob×200, 255 = nodata) +
+   manifest + simplified country outline; these drive the site's Data viewer tab
+   (canvas render, hover values, and client-side percentile-vs-own-record all read
+   values straight off the tiles). Needs `data/tmp/African_States.geojson`
+   (from blob raw/acmad/.../geojson/ — kept out of data/raw so upload_blob
+   doesn't mirror it to a stray path).
+4. `uv run python -m src.upload_blob` — mirrors `data/raw/` to blob at
+   `ds-regional-forecasts/raw/...` and all derived `docs/` asset dirs to
+   `processed/site-assets/...` (dev account, via ocha-stratus)
 
 `data/` is gitignored; the site carries only derived assets.
 
@@ -61,3 +69,16 @@ falls back to repo-relative paths (i.e. images break but the catalog still brows
 Local `data/raw/` is disposable — blob is authoritative; re-download with
 `src/run_grab.py` (resumable). RCOF conference decks (~259 files) deliberately not
 grabbed — only forum core products (statements/bulletins/maps).
+
+## Data viewer tab (since 2026-07-31)
+
+The only true multi-year gridded stacks in the archive are the two Zenodo NetCDFs
+(consensus 2016–2024, objective 2017–2024; JJAS tercile probs, 0.1°, 510×170,
+Sahel domain). Everything else machine-readable is either single-issue (LRF
+shapefiles/GeoJSONs) or model debris. The viewer's percentile mode uses midrank
+percentile of a cell's value within its own record, needing ≥4 finite years
+(consensus zone coverage varies by year; 2024's domain is ~2× earlier years).
+Tercile colors: PB oranges / PN neutral grays / PA blues, dominant-tercile chips
+validated CVD-safe (`#d0842d/#6f6d67/#5190d3`); near-normal deliberately reads
+neutral (domain convention: gray = "no signal"). ACMAD LRF polygon shapefiles
+(275 .shp, 2018+ patchy) are the candidate next layer — vector overlay, not tiles.
