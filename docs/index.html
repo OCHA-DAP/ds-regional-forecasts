@@ -774,7 +774,13 @@ async function renderCountryPanel() {
     svg += `<text x="${lab - 6}" y="${y + 12}" text-anchor="end">${ISO_NAMES[iso] || iso}</text>
       <rect x="${dry ? cx : cx - w}" y="${y}" width="${Math.max(w, 1)}" height="14" rx="2"
         fill="${dry ? "#d0842d" : "#5190d3"}"><title>${ISO_NAMES[iso] || iso} · dryness ${score} · #${rank} driest of ${n} ${p.groups[dstate.yi]} issues</title></rect>
-      <text class="score" x="${dry ? cx + w + 5 : cx - w - 5}" y="${y + 12}" text-anchor="${dry ? "start" : "end"}">${score > 0 ? "+" : ""}${score.toFixed(0)} · #${rank}/${n}</text>`;
+      ${(() => {
+        const txt = `${score > 0 ? "+" : ""}${score.toFixed(0)} · #${rank}/${n}`;
+        const out = dry ? cx + w + 5 : cx - w - 5;
+        const collide = dry ? out > W - 66 : out < lab + 66;
+        if (collide) return `<text x="${dry ? cx + w - 5 : cx - w + 5}" y="${y + 12}" text-anchor="${dry ? "end" : "start"}" fill="#fff" style="fill:#fff">${txt}</text>`;
+        return `<text class="score" x="${out}" y="${y + 12}" text-anchor="${dry ? "start" : "end"}">${txt}</text>`;
+      })()}`;
   });
   svg += `<text x="${cx - 8}" y="${H - 5}" text-anchor="end">← wetter-leaning</text>
           <text x="${cx + 8}" y="${H - 5}">drier-leaning →</text>`;
