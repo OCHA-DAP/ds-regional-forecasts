@@ -106,6 +106,29 @@ show less signal than unmasked as expected. Palette gotcha for future eyes:
 TG) uses the RdYlBu ramps — only PRCP gets teal/brown BrBG; onsetD gets BrBG
 reversed.
 
+Downstream of the digitized stacks (all since 2026-08-24):
+- **Data viewer**: `derive_data_viewer.py` packs the two MME01 PRCP stacks as
+  data-tile products (`sadc-mme`, `sadc-mme-full`). These carry a `groups`
+  axis (target season per slice); the viewer compares percentiles and pin
+  histories within same-season slices only. Dominant-only encoding: the
+  dominant tercile's channel holds prob_lb×2, the other two hold 0; all-zero
+  = no signal (skipped in dominant mode); sea (outside the SADC land mask) =
+  255 nodata.
+- **`src/osf_country_stats.py`**: per-country area fractions by dominant
+  tercile + signed dryness score per (system, masked, issued, season), with
+  midrank percentile of each issue within its same-target-season record —
+  re-run after each grab+digitize to rank a NEW issue against history (the
+  SEAS5-style "how extreme is this one" question, using the official regional
+  product). Prints the latest MME01 issue's ranking.
+- **`src/compare_osf_seas5.py`**: joins each country-slice to raw SEAS5 adm0
+  seasonal means (prod DB `public.seas5`, PGSSLMODE=require) ranked against
+  1993–2022 same-issue-month climatology. Headline (2023-06→2026-04, 910
+  unmasked slices): the CSC MME leans above-normal in ~76% of slices vs
+  SEAS5's ~29% — a strong wet lean relative to raw SEAS5 for identical
+  periods; when the MME does say below-normal there is real signal (SEAS5
+  mean at the ~37–39th percentile); Spearman(dryness, SEAS5 pct) ≈ −0.25.
+  Outputs + 2 charts in blob `processed/osf-digitized/` (charts/ dir).
+
 ## Context worth keeping
 
 - RCOF = Regional Climate Outlook Forum: consensus tercile maps negotiated at
