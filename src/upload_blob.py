@@ -38,8 +38,8 @@ if __name__ == "__main__":
             if not f.is_file() or f.suffix == ".part":
                 continue
             blob_name = f"{PROJECT_PREFIX}/{prefix}/{f.relative_to(local_dir)}"
-            # small mutable index/data files change under a constant name
-            mutable = f.name in ("manifest.json", "outline.geojson") or f.suffix == ".nc"
+            # derived data + small index files change under constant names
+            mutable = prefix == "processed" or f.name in ("manifest.json", "outline.geojson")
             if blob_name in existing and not mutable:
                 n_skip += 1
                 continue
