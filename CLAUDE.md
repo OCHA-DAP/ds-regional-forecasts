@@ -75,6 +75,36 @@ forecasts (ECMWF SEAS5). Output: GitHub Pages gallery from `docs/`.
   outlook polygons.
 - `src/grab_sadc.py` runs only the three SADC modules and merges into
   `data/catalog_raw.json` (full `run_grab` re-crawls ACMAD THREDDS for hours).
+- The CSC's own production pipeline is public at **github.com/sadccsc/osf**
+  (PyCPT; inputs from IRI DL + C3S) but only the rendered maps are synced to
+  the website — the forecast NetCDFs stay on their internal box. If exact
+  grids are ever needed, rerun their pipeline with their committed config
+  (dictionaries/) rather than digitizing.
+
+## Digitized OSF data (since 2026-08-24)
+
+`src/digitize_osf.py` inverts all 742 OSF map images back into data — the
+rendering recipe in sadccsc/osf `functions_plot.py` (known colormaps, level
+breaks, cartopy layout at dpi 300) makes them losslessly reversible to the
+plotted classes. Georeferencing was fitted once against the CSC's own
+`sadc_continental.geojson` (boundary-overlap 0.74; constant across all
+image types) with per-image sub-pixel phase refinement; the grid is 0.25°,
+centers at .125 offsets, 169×182 cells. Recovered per cell: dominant tercile
+(1/2/3) + probability class lower bound {40,50,60,70} ({40,50,70} for
+normal). NOT recoverable: continuous probs, the 33–40 class of any tercile
+(renders white ≈ masked/no-data — all collapse to code 0), sub-dominant
+terciles, and ~1.6% of cells under the in-axes CSC logo (open ocean; code
+-1, as are border-overprinted cells, <1%). Output: one NetCDF per
+(system, predictor, masked/unmasked) in `data/processed/osf-digitized/`
+(mirrored to blob `processed/osf-digitized/`), dims (variable, issued,
+lead 0–4, lat, lon) + season labels. Validated: reconstructions visually
+match originals across all three palette families; DJF 2023-24 El Niño
+drought (solid below-normal Zambia/Zimbabwe) and SON 2023 Tanzania wet
+signal reproduce; MME↔SEAS51 dominant-tercile agreement 86%; masked files
+show less signal than unmasked as expected. Palette gotcha for future eyes:
+`Rx5day`'s category is "max_daily_rainfall", NOT "rainfall", so it (with CDD,
+TG) uses the RdYlBu ramps — only PRCP gets teal/brown BrBG; onsetD gets BrBG
+reversed.
 
 ## Context worth keeping
 

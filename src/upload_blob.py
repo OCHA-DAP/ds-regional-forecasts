@@ -17,6 +17,8 @@ ROOT = Path(__file__).parents[1]
 # (local dir, blob prefix under PROJECT_PREFIX)
 UPLOADS = [
     (ROOT / "data" / "raw", "raw"),
+    # our own derived data products (e.g. digitized OSF NetCDFs)
+    (ROOT / "data" / "processed", "processed"),
     # derived site assets, served to the Pages site via the token issuer
     (ROOT / "docs" / "img", "processed/site-assets/img"),
     (ROOT / "docs" / "maps", "processed/site-assets/maps"),

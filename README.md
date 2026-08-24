@@ -17,6 +17,9 @@ compared with global forecasts such as ECMWF SEAS5.
   WAS-NextGen digitized PRESASS dataset from Zenodo
   ([10.5281/zenodo.18936657](https://doi.org/10.5281/zenodo.18936657), CC-BY 4.0)
 - `src/run_grab.py` — download everything to `data/raw/` (resumable)
+- `src/digitize_osf.py` — invert the SADC CSC objective-forecast map images
+  back into data (dominant tercile + probability class, 0.25° NetCDF) using the
+  rendering recipe published in [sadccsc/osf](https://github.com/sadccsc/osf)
 - `src/derive_assets.py` — classify files, render thumbnails, build the site catalog
 - `src/upload_blob.py` — mirror the raw archive to Azure blob storage
 - `docs/` — the static gallery site (GitHub Pages)
