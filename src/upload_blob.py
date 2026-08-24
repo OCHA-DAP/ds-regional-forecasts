@@ -38,7 +38,9 @@ if __name__ == "__main__":
             if not f.is_file() or f.suffix == ".part":
                 continue
             blob_name = f"{PROJECT_PREFIX}/{prefix}/{f.relative_to(local_dir)}"
-            if blob_name in existing:
+            # small mutable index/data files change under a constant name
+            mutable = f.name in ("manifest.json", "outline.geojson") or f.suffix == ".nc"
+            if blob_name in existing and not mutable:
                 n_skip += 1
                 continue
             with open(f, "rb") as fh:

@@ -552,12 +552,19 @@ async function ensureProduct(product) {
   document.getElementById("d-note").textContent = "";
 }
 
-// midrank percentile of this year's value within the pixel's own record
+// midrank percentile of this year's value within the pixel's own record.
+// Products with a `groups` axis (issue+season slices) compare only slices
+// sharing the current slice's group (same target season).
+function recordSlices(p, year) {
+  if (!p.groups) return p.years;
+  const g = p.groups[p.years.indexOf(year)];
+  return p.years.filter((_, k) => p.groups[k] === g);
+}
 function pctField(product, terc, year) {
   const key = `${product}|${terc}|${year}`;
   if (DPCT[key]) return DPCT[key];
   const p = DMANIFEST.products[product], tiles = DTILES[product][terc];
-  const yrs = p.years, cur = tiles[year], n = p.width * p.height;
+  const yrs = recordSlices(p, year), cur = tiles[year], n = p.width * p.height;
   const out = new Float32Array(n).fill(NaN);
   for (let i = 0; i < n; i++) {
     const v = cur[i];
@@ -589,6 +596,7 @@ function renderDataCanvas() {
     for (let i = 0; i < n; i++) {
       if (pb[i] === 255 || pn[i] === 255 || pa[i] === 255) continue;
       const vals = [pb[i], pn[i], pa[i]], mx = Math.max(...vals);
+      if (mx === 0) continue; // dominant-only products: all-zero = no signal
       const terc = ["PB","PN","PA"][vals.indexOf(mx)];
       put(i, probColor(terc, mx / 200), 255);
     }
@@ -636,8 +644,11 @@ function renderLegend() {
       `<span class="chip"><i style="background:${cssRGB(probColor(t, 0.45))}"></i>${TERC_LABEL[t]} dominant</span>`
     ).join("") + `<span>· darker = higher probability</span>`;
   } else if (dstate.view === "pct") {
-    el.innerHTML = `<span>lowest in record</span>${grad(p => pctColor(p), 0, 100)}<span>highest in record</span>
-      <span>· percentile of P(${TERC_LABEL[dstate.layer]}) within this cell's own ${DMANIFEST.products[dstate.product].years.length}-year record</span>`;
+    const p = DMANIFEST.products[dstate.product];
+    const rec = recordSlices(p, p.years[dstate.yi]);
+    const what = p.groups ? `${rec.length} same-season issues` : `${rec.length}-year record`;
+    el.innerHTML = `<span>lowest in record</span>${grad(q => pctColor(q), 0, 100)}<span>highest in record</span>
+      <span>· percentile of P(${TERC_LABEL[dstate.layer]}) within this cell's own ${what}</span>`;
   } else {
     el.innerHTML = `<span>0%</span>${grad(p => probColor(dstate.layer, p), 0, PROB_MAX)}<span>${Math.round(PROB_MAX*100)}%+</span>
       <span>· P(${TERC_LABEL[dstate.layer]})</span>`;
@@ -659,7 +670,7 @@ function renderYearStrip() {
     const b = document.createElement("button");
     b.className = "yearbtn";
     b.setAttribute("aria-pressed", i === dstate.yi);
-    b.textContent = y;
+    b.textContent = p.labels ? p.labels[i] : y;
     b.onclick = () => { dstate.yi = i; renderData(); };
     strip.append(b);
   });
@@ -694,31 +705,46 @@ function renderPin() {
   const p = DMANIFEST.products[dstate.product], { i, lon, lat } = dstate.pin;
   const bw = 30, gap = 10, hgt = 90, pad = 24;
   let bars = "", any = false;
-  p.years.forEach((y, k) => {
+  // grouped products: history over same-target-season slices only
+  const ks = p.groups
+    ? p.years.map((_, k) => k).filter(k => p.groups[k] === p.groups[dstate.yi])
+    : p.years.map((_, k) => k);
+  ks.forEach((k, kk) => {
+    const y = p.years[k];
+    const lbl = p.labels ? p.labels[k] : String(y);
     const v = cellValues(i, y);
-    const x = pad + k * (bw + gap);
-    if (v.PB == null || v.PN == null || v.PA == null) {
+    const x = pad + kk * (bw + gap);
+    const tot = v.PB == null ? 0 : v.PB + v.PN + v.PA;
+    if (!tot) {
       bars += `<text x="${x + bw/2}" y="${hgt/2}" text-anchor="middle">–</text>`;
     } else {
       any = true;
-      const tot = v.PB + v.PN + v.PA;
       let yy = 10 + hgt;
       for (const t of ["PB","PN","PA"]) {
         const h = hgt * v[t] / tot;
         yy -= h;
-        bars += `<rect x="${x}" y="${yy}" width="${bw}" height="${Math.max(h-1,0)}" fill="${cssRGB(probColor(t, 0.45))}" rx="1"><title>${y} · P(${TERC_LABEL[t]}) ${v[t].toFixed(0)}%</title></rect>`;
+        bars += `<rect x="${x}" y="${yy}" width="${bw}" height="${Math.max(h-1,0)}" fill="${cssRGB(probColor(t, 0.45))}" rx="1"><title>${lbl} · P(${TERC_LABEL[t]}) ${v[t].toFixed(0)}%</title></rect>`;
       }
     }
     if (k === dstate.yi) bars += `<rect x="${x-2.5}" y="7.5" width="${bw+5}" height="${hgt+5}" fill="none" stroke="var(--acmad)" stroke-width="1.5" rx="3"/>`;
-    bars += `<text x="${x + bw/2}" y="${hgt + 24}" text-anchor="middle">${y}</text>`;
+    if (p.groups) {
+      const [ym, seas] = lbl.split(" ");
+      bars += `<text x="${x + bw/2}" y="${hgt + 22}" text-anchor="middle" font-size="9">${ym}</text>
+               <text x="${x + bw/2}" y="${hgt + 33}" text-anchor="middle" font-size="9">${seas}</text>`;
+    } else {
+      bars += `<text x="${x + bw/2}" y="${hgt + 24}" text-anchor="middle">${lbl}</text>`;
+    }
   });
-  const W = pad * 2 + p.years.length * (bw + gap) - gap;
+  const W = pad * 2 + ks.length * (bw + gap) - gap;
   const year = p.years[dstate.yi], v = cellValues(i, year);
+  const dlabel = p.labels ? p.labels[dstate.yi] : year;
+  const curTot = v.PB == null ? 0 : v.PB + v.PN + v.PA;
   const cur = v.PB == null ? "no forecast drawn here this year" :
-    `${year}: below ${v.PB.toFixed(0)}% · near ${v.PN.toFixed(0)}% · above ${v.PA.toFixed(0)}%`;
+    !curTot && p.groups ? `${dlabel}: no signal at this cell` :
+    `${dlabel}: below ${v.PB.toFixed(0)}% · near ${v.PN.toFixed(0)}% · above ${v.PA.toFixed(0)}%`;
   el.innerHTML = `<div class="dh-head"><strong>${fmtCoord(lon, lat)}</strong><span>${cur}</span>
       <button class="dh-close" id="dh-close">✕ unpin</button></div>` +
-    (any ? `<svg width="${W}" height="${hgt + 32}" role="img" aria-label="tercile probabilities by year">${bars}</svg>`
+    (any ? `<svg width="${W}" height="${hgt + (p.groups ? 40 : 32)}" role="img" aria-label="tercile probabilities by year">${bars}</svg>`
          : `<span class="vhint">no data at this cell in any year</span>`);
   el.hidden = false;
   document.getElementById("dh-close").onclick = () => { dstate.pin = null; renderPin(); };
@@ -754,7 +780,7 @@ async function initData() {
   }
   const p = DMANIFEST.products[dstate.product];
   dstate.yi = Math.min(dstate.yi, p.years.length - 1);
-  document.getElementById("d-attrib").textContent = `${p.note} Data: ${DMANIFEST.attribution}.`;
+  document.getElementById("d-attrib").textContent = `${p.note} Data: ${p.attribution || DMANIFEST.attribution}.`;
   try { await ensureProduct(dstate.product); }
   catch { note.textContent = "failed to load data tiles"; return; }
   renderData();

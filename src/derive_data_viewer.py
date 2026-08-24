@@ -56,6 +56,34 @@ ATTRIBUTION = (
     "Houngnibo et al., AGRHYMET/WAS-NextGen, doi:10.5281/zenodo.18936657 (CC-BY 4.0)"
 )
 
+# SADC OSF digitized stacks (src/digitize_osf.py). Rainfall only for the viewer.
+OSF_PRODUCTS = {
+    "sadc-mme": {
+        "file": REPO / "data" / "processed" / "osf-digitized" / "osf_digitized_MME01.nc",
+        "label": "SADC CSC MME (skill-masked)",
+        "note": (
+            "Rainfall tercile forecasts digitized from the SADC CSC objective "
+            "multi-model ensemble maps (skill-masked product). Only the dominant "
+            "tercile's probability class survives digitization — the other two "
+            "terciles show 0 and white areas mean weak signal, low skill, or no "
+            "data. Slices are issue month + target season; the percentile view "
+            "compares only same-target-season issues."
+        ),
+    },
+    "sadc-mme-full": {
+        "file": REPO / "data" / "processed" / "osf-digitized" / "osf_digitized_MME01_unmasked.nc",
+        "label": "SADC CSC MME (unmasked)",
+        "note": (
+            "As the skill-masked product, but without the CSC's Generalized-ROC "
+            "skill mask — fuller coverage, including low-skill areas."
+        ),
+    },
+}
+OSF_ATTRIBUTION = (
+    "SADC Climate Services Centre objective seasonal forecast maps "
+    "(csc.sadc.int), digitized by OCHA CHD (ds-regional-forecasts)"
+)
+
 
 def pack_product(key: str, spec: dict) -> dict:
     da = xr.open_dataset(spec["file"])[spec["var"]]
@@ -95,6 +123,73 @@ def pack_product(key: str, spec: dict) -> dict:
     }
 
 
+def sadc_land_mask(lats: np.ndarray, lons: np.ndarray) -> np.ndarray:
+    """True where a cell center falls inside a SADC country polygon."""
+    import json as _json
+
+    from shapely import contains_xy
+    from shapely.geometry import shape
+    from shapely.ops import unary_union
+
+    gj = _json.loads((REPO / "data" / "tmp" / "sadc_continental.geojson").read_text())
+    union = unary_union([shape(f["geometry"]) for f in gj["features"]]).buffer(0.05)
+    xx, yy = np.meshgrid(lons, lats)
+    return contains_xy(union, xx.ravel(), yy.ravel()).reshape(xx.shape)
+
+
+def pack_osf(key: str, spec: dict) -> dict:
+    """OSF digitized stacks -> tiles. Dominant tercile's class only: the
+    dominant channel carries prob_lb, the other two carry 0; no-signal land
+    is 0 in all channels; sea / unclassifiable is nodata."""
+    ds = xr.open_dataset(spec["file"]).sel(variable="PRCP")
+    lats, lons = ds["lat"].values, ds["lon"].values
+    land = sadc_land_mask(lats, lons)
+
+    slices, labels, groups = [], [], []
+    pdir = OUT / key
+    pdir.mkdir(parents=True, exist_ok=True)
+    for ii, issued in enumerate(ds["issued"].values):
+        ym = str(issued)[:7]
+        for li in ds["lead"].values:
+            sel = ds.isel(issued=ii).sel(lead=li)
+            if not bool(sel["digitized"]):
+                continue
+            season = str(sel["season"].values)
+            skey = f"{ym}_{season}"
+            slices.append(skey)
+            labels.append(f"{ym} {season}")
+            groups.append(season)
+            terc = sel["tercile"].values
+            plb = sel["prob_lb"].values
+            for ti, code in enumerate((1, 2, 3)):  # PB, PN, PA
+                px = np.zeros(terc.shape, dtype=np.uint8)
+                px[terc == code] = (plb[terc == code].astype(np.uint16) * 2).astype(np.uint8)
+                px[(terc == -1) | ~land] = NODATA
+                Image.fromarray(px, mode="L").save(
+                    pdir / f"{['PB', 'PN', 'PA'][ti]}_{skey}.png", optimize=True
+                )
+
+    res = abs(lons[1] - lons[0])
+    return {
+        "label": spec["label"],
+        "note": spec["note"],
+        "attribution": OSF_ATTRIBUTION,
+        "years": slices,
+        "labels": labels,
+        "groups": groups,
+        "terciles": ["PB", "PN", "PA"],
+        "width": len(lons),
+        "height": len(lats),
+        "bbox": [
+            round(float(lons.min() - res / 2), 3),
+            round(float(lats.min() - res / 2), 3),
+            round(float(lons.max() + res / 2), 3),
+            round(float(lats.max() + res / 2), 3),
+        ],
+        "season": "per slice",
+    }
+
+
 def make_outline(bbox: list[float]) -> None:
     import geopandas as gpd
     from shapely.geometry import box
@@ -115,7 +210,10 @@ def main() -> None:
         "scale": SCALE,
         "nodata": NODATA,
         "attribution": ATTRIBUTION,
-        "products": {k: pack_product(k, spec) for k, spec in PRODUCTS.items()},
+        "products": {
+            **{k: pack_product(k, spec) for k, spec in PRODUCTS.items()},
+            **{k: pack_osf(k, spec) for k, spec in OSF_PRODUCTS.items()},
+        },
     }
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=1))
 
