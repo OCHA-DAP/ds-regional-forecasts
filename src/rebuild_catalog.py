@@ -37,6 +37,17 @@ def reconstruct(relpath: str) -> dict | None:
         if len(parts) > 2 and parts[2].isdigit():
             rec["issued"] = parts[2]
         rec["source_url"] = f"https://agrhymet.cilss.int/?s={name}"
+    elif parts[0] == "sadc":
+        rec["org"] = "sadc"
+        rec["product"] = parts[1]  # sarcof | osf-seasonal
+        if len(parts) > 2 and parts[2][:4].isdigit():
+            rec["issued"] = parts[2]
+        if parts[1] == "osf-seasonal":
+            rec["source_url"] = (
+                f"http://csc.sadc.int/sites/default/files/climate-prediction/osf-seasonal/{name}"
+            )
+        else:
+            rec["source_url"] = f"https://www.sadc.int/documents?title={name}"
     elif parts[0] == "zenodo":
         rec["org"] = "agrhymet"
         rec["product"] = "presass-digitized"

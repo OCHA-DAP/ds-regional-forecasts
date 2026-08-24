@@ -22,6 +22,14 @@ ACMAD_SEASONAL_TREES = [
 
 AGRHYMET_WP_API = "https://agrhymet.cilss.int/wp-json/wp/v2"
 
+# SADC CSC (Gaborone): HTTPS on csc.sadc.int times out — plain HTTP only,
+# same disease as ACMAD. www.sadc.int (Secretariat Drupal) is fine on HTTPS.
+SADC_BASE = "https://www.sadc.int"
+CSC_BASE = "http://csc.sadc.int"
+# Drupal page whose embedded drupalSettings JSON lists every valid
+# objective-forecast image (folders + issued dates + product/system codes).
+CSC_OSF_PAGE = f"{CSC_BASE}/climate-prediction?data_type=seasonal"
+
 ZENODO_RECORD = "18936657"  # WAS-NextGen digitized consensus forecasts (CC-BY 4.0)
 # The 1.3 GB obs/forcing zip is excluded; we only need the forecast NetCDFs.
 ZENODO_FILES = [

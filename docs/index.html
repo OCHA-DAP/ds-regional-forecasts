@@ -16,6 +16,7 @@
     --border: rgba(11,11,11,0.10);
     --acmad: #2a78d6;
     --agrhymet: #eb6834;
+    --sadc: #12917f;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -29,6 +30,7 @@
       --border: rgba(255,255,255,0.10);
       --acmad: #3987e5;
       --agrhymet: #d95926;
+      --sadc: #17a892;
     }
   }
   :root[data-theme="dark"] {
@@ -42,6 +44,7 @@
     --border: rgba(255,255,255,0.10);
     --acmad: #3987e5;
     --agrhymet: #d95926;
+    --sadc: #17a892;
   }
   * { box-sizing: border-box; }
   body {
@@ -158,9 +161,11 @@
   <h1>African Regional Seasonal Forecasts</h1>
   <p class="sub">
     Archive of seasonal forecast products from <strong>ACMAD</strong> (continental Long-Range
-    Forecasts, ACCOF statements, RCOF outputs) and <strong>AGRHYMET</strong> (PRESASS &amp;
-    PRESAGG forums), assembled to compare regional consensus products against global
-    forecasts such as ECMWF SEAS5. Sources: ACMAD THREDDS server, agrhymet.cilss.int,
+    Forecasts, ACCOF statements, RCOF outputs), <strong>AGRHYMET</strong> (PRESASS &amp;
+    PRESAGG forums), and the <strong>SADC Climate Services Centre</strong> (SARCOF forum
+    statements back to 2002 and objective seasonal forecast maps), assembled to compare
+    regional consensus products against global forecasts such as ECMWF SEAS5. Sources:
+    ACMAD THREDDS server, agrhymet.cilss.int, sadc.int, csc.sadc.int,
     the Wayback Machine, and the WAS-NextGen digitized dataset
     (<a href="https://doi.org/10.5281/zenodo.18936657">Zenodo, CC-BY 4.0</a>).
   </p>
@@ -215,6 +220,7 @@
   <div class="filters" id="filters">
     <button class="orgbtn" data-org="acmad" aria-pressed="true"><span class="dot" style="background:var(--acmad)"></span>ACMAD</button>
     <button class="orgbtn" data-org="agrhymet" aria-pressed="true"><span class="dot" style="background:var(--agrhymet)"></span>AGRHYMET</button>
+    <button class="orgbtn" data-org="sadc" aria-pressed="true"><span class="dot" style="background:var(--sadc)"></span>SADC CSC</button>
     <select id="f-product"><option value="">All products</option></select>
     <select id="f-year"><option value="">All years</option></select>
     <select id="f-season"><option value="">All seasons</option></select>
@@ -241,13 +247,14 @@ const PRODUCT_LABELS = {
   "presass": "PRESASS", "presagg": "PRESAGG", "presac": "PRESAC",
   "medcof": "MEDCOF", "swiocof": "SWIOCOF", "sarcof": "SARCOF",
   "presass-digitized": "PRESASS digitized (NetCDF)",
+  "osf-seasonal": "CSC Objective Seasonal Forecast",
 };
 const KIND_LABELS = {
   "map-image": "Forecast map", "communique": "Communiqué", "bulletin": "Bulletin",
   "statement": "Statement", "shapefile": "Shapefile", "geojson": "GeoJSON",
   "netcdf": "NetCDF", "document": "Document", "other": "Other",
 };
-const state = { orgs: new Set(["acmad", "agrhymet"]), product: "", year: "", season: "", kind: "", lang: "", q: "", shown: 60 };
+const state = { orgs: new Set(["acmad", "agrhymet", "sadc"]), product: "", year: "", season: "", kind: "", lang: "", q: "", shown: 60 };
 let CAT = [];
 
 // ---------- blob-served assets via the team token issuer ----------

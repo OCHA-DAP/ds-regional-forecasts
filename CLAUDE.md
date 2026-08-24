@@ -1,8 +1,8 @@
 # ds-regional-forecasts
 
-Archive + gallery of African regional seasonal forecast products (ACMAD, AGRHYMET),
-built to show what regional consensus products exist alongside global forecasts
-(ECMWF SEAS5). Output: GitHub Pages gallery from `docs/`.
+Archive + gallery of African regional seasonal forecast products (ACMAD, AGRHYMET,
+SADC CSC), built to show what regional consensus products exist alongside global
+forecasts (ECMWF SEAS5). Output: GitHub Pages gallery from `docs/`.
 
 ## Pipeline
 
@@ -40,6 +40,41 @@ built to show what regional consensus products exist alongside global forecasts
   forecasts 2016–2024 as NetCDF (CC-BY 4.0, by AGRHYMET's own Houngnibo et al.).
   The only public machine-readable historical record. The 1.3 GB obs zip is
   deliberately excluded.
+
+## SADC / SARCOF (surveyed 2026-08-24)
+
+- **www.sadc.int** (Secretariat, Drupal): document library at
+  `/documents?title=<term>` (title search only) holds SARCOF statements; more
+  hide behind `/latest-news` nodes and hand-verified `/sites/default/files/`
+  URLs (`EXTRA_LIVE` in `sadc_web.py`).
+- **csc.sadc.int** (Climate Services Centre, Gaborone): HTTPS times out — HTTP
+  only, same disease as ACMAD. Drupal-10 relaunch ~2025 killed all old Joomla
+  `/images/...` URLs; only SARCOF-30+ live there now. Its
+  `/climate-prediction` page is the gem: a custom module embeds the complete
+  objective-forecast image space as drupalSettings JSON and the site builds
+  image URLs client-side — `sadc_osf.py` re-reads that JSON each run
+  (self-updating) and probes the constructible URLs (404s expected: a target
+  season is published to ~4 months lead). Seasonal issues exist 2023-Jun on.
+- **Wayback**: three generations of dead hosting rescued in `sadc_wayback.py`
+  (dmc.co.zw = SADC Drought Monitoring Centre Harare ~2002-2006; old sadc.int
+  CMS `/files/<hash>/`; Joomla csc.sadc.int). `STATEMENT_SARCOF.pdf` (2010) is
+  SARCOF-14 — identified via its XMP title.
+- **Known-lost**: SARCOF-11/12/13 statements (2007–2009, DMC site barely
+  archived) and the SARCOF-22 / SARCOF-26 main statements (only their
+  mid-season review/updates survive). No digitized machine-readable SARCOF
+  record exists anywhere (checked Zenodo — the WAS-NextGen equivalent for
+  Southern Africa hasn't been made).
+- Session→year: SARCOF-1 = 1997, annual through SARCOF-27 (2023); from
+  SARCOF-28 (Jan 2024) there are two forums per year (Jan/Feb mid-season +
+  Aug/Sep main) — `session_year()` in `sadc_web.py` encodes this.
+- Scope kept to core products: statements/summaries/updates/forecast bulletins
+  + press releases carrying the outlook; OSF images limited to tercile
+  probabilities (MME01 all variables, single systems PRCP only). Conference
+  logistics (announcements, programmes, speeches) excluded. `cscgeo.sadc.int`
+  (geoserver) was unreachable during the survey — worth re-probing someday for
+  outlook polygons.
+- `src/grab_sadc.py` runs only the three SADC modules and merges into
+  `data/catalog_raw.json` (full `run_grab` re-crawls ACMAD THREDDS for hours).
 
 ## Context worth keeping
 

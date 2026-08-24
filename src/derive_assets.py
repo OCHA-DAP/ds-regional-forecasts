@@ -168,6 +168,12 @@ def img_copy(src: Path, dest: Path, max_px: int = 1400) -> bool:
 
 if __name__ == "__main__":
     records = json.loads((ROOT / "data" / "catalog_raw.json").read_text())
+    # blob is authoritative for raw files; local data/raw may hold only the
+    # newest grab. Records whose raw file is absent keep their previously
+    # derived entry (with its asset pointers) from the committed catalog.
+    published = {}
+    if (DOCS / "catalog.json").exists():
+        published = {r["path"]: r for r in json.loads((DOCS / "catalog.json").read_text())}
     out = []
     for rec in records:
         if JUNK_NAME_RE.search(rec["name"]):
@@ -175,6 +181,8 @@ if __name__ == "__main__":
         rec = classify(rec)
         src = DATA_RAW / rec["path"]
         if not src.exists():
+            if rec["path"] in published:
+                out.append(published[rec["path"]])
             continue
         rec["size_kb"] = src.stat().st_size // 1024
         stem = slug(rec["path"])
