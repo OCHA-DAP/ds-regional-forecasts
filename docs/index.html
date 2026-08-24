@@ -135,7 +135,12 @@
   .themetoggle { float: right; background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--ink-2); padding: 4px 10px; cursor: pointer; font: inherit; font-size: 13px; }
 
   /* ---------- Data viewer ---------- */
-  .dmap { position: relative; width: 100%; aspect-ratio: 3 / 1; background: var(--page); border: 1px solid var(--grid); border-radius: 8px; overflow: hidden; }
+  .dmap { position: relative; width: 100%; aspect-ratio: 3 / 1; margin: 0 auto; background: var(--page); border: 1px solid var(--grid); border-radius: 8px; overflow: hidden; }
+  .dcountry { margin-top: 14px; border-top: 1px solid var(--grid); padding-top: 10px; }
+  .dcountry h3 { margin: 0 0 2px; font-size: 14px; }
+  .dcountry .sub { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+  .dcountry svg text { fill: var(--ink-2); font-size: 11px; }
+  .dcountry svg .score { fill: var(--ink); }
   .dmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #d-canvas { image-rendering: pixelated; }
   #d-overlay { cursor: crosshair; }
@@ -192,6 +197,11 @@
       </select>
       <span class="count" id="d-note"></span>
     </div>
+    <div class="vfilters" id="d-slicefilters" hidden>
+      <select id="d-fseason"><option value="">All valid periods</option></select>
+      <select id="d-fyear"><option value="">All issue years</option></select>
+      <select id="d-fmonth"><option value="">All issue months</option></select>
+    </div>
     <div class="yearstrip" id="d-years"></div>
     <div class="dmap" id="d-map">
       <canvas id="d-canvas"></canvas>
@@ -199,6 +209,7 @@
       <div class="dtip" id="d-tip" hidden></div>
     </div>
     <div class="dlegend" id="d-legend"></div>
+    <div class="dcountry" id="d-country" hidden></div>
     <div class="dhist" id="d-hist" hidden></div>
     <p class="vhint">Rainfall tercile probabilities on each product's digitization grid · hover for values ·
       click a cell to pin its forecast history · ←/→ step through issues</p>
@@ -497,7 +508,23 @@ document.getElementById("v-season").addEventListener("change", e => { vstate.sea
 // Data tiles are grayscale PNGs: pixel = probability * 200, 255 = nodata.
 // The browser reads values back off a canvas, so the same tiny asset drives
 // rendering, hover values, and the percentile-vs-own-history computation.
-const dstate = { product: "consensus", layer: "dom", view: "prob", yi: 0, pin: null };
+const dstate = { product: "consensus", layer: "dom", view: "prob", yi: 0, pin: null,
+                 fseason: "", fyear: "", fmonth: "" };
+let DCOUNTRY = null; // country_stats.json, lazy-loaded for sadc products
+
+// slice indices matching the valid-period / issue-year / issue-month filters
+function stripSlices() {
+  const p = DMANIFEST.products[dstate.product];
+  return p.years.map((_, k) => k).filter(k => {
+    if (!p.groups) {
+      return !dstate.fyear || String(p.years[k]).startsWith(dstate.fyear);
+    }
+    const ym = p.labels[k].split(" ")[0];
+    return (!dstate.fseason || p.groups[k] === dstate.fseason)
+        && (!dstate.fyear || ym.slice(0, 4) === dstate.fyear)
+        && (!dstate.fmonth || ym.slice(5, 7) === dstate.fmonth);
+  });
+}
 let DMANIFEST = null;
 const DTILES = {};   // product -> terc -> year -> Uint8Array(W*H)
 const DPCT = {};     // cache: "product|terc|year" -> Float32Array (NaN = nodata)
@@ -655,26 +682,106 @@ function renderLegend() {
   }
 }
 
+function stepSlice(d) {
+  const vis = stripSlices();
+  if (!vis.length) return;
+  const pos = vis.indexOf(dstate.yi);
+  dstate.yi = vis[pos === -1 ? vis.length - 1 : Math.max(0, Math.min(vis.length - 1, pos + d))];
+  renderData();
+}
+
 function renderYearStrip() {
   const p = DMANIFEST.products[dstate.product];
   const strip = document.getElementById("d-years");
   strip.innerHTML = "";
+  const vis = stripSlices();
+  if (vis.length && !vis.includes(dstate.yi)) dstate.yi = vis[vis.length - 1];
   const nav = (txt, d) => {
     const b = document.createElement("button");
     b.className = "navbtn"; b.textContent = txt;
-    b.onclick = () => { dstate.yi = Math.max(0, Math.min(p.years.length - 1, dstate.yi + d)); renderData(); };
+    b.onclick = () => stepSlice(d);
     return b;
   };
   strip.append(nav("←", -1));
-  p.years.forEach((y, i) => {
+  vis.forEach(i => {
     const b = document.createElement("button");
     b.className = "yearbtn";
     b.setAttribute("aria-pressed", i === dstate.yi);
-    b.textContent = p.labels ? p.labels[i] : y;
+    b.textContent = p.labels ? p.labels[i] : p.years[i];
     b.onclick = () => { dstate.yi = i; renderData(); };
     strip.append(b);
   });
   strip.append(nav("→", 1));
+  if (!vis.length) {
+    const s = document.createElement("span");
+    s.className = "count";
+    s.textContent = "no issues match these filters";
+    strip.append(s);
+  }
+}
+
+function populateSliceFilters() {
+  const p = DMANIFEST.products[dstate.product];
+  const wrap = document.getElementById("d-slicefilters");
+  wrap.hidden = !p.groups;
+  if (!p.groups) {
+    dstate.fseason = dstate.fyear = dstate.fmonth = "";
+    return;
+  }
+  const fill = (id, values, current, allLabel) => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = `<option value="">${allLabel}</option>` +
+      values.map(v => `<option value="${v}"${v === current ? " selected" : ""}>${v}</option>`).join("");
+  };
+  const seasons = [...new Set(p.groups)];
+  const yms = p.labels.map(l => l.split(" ")[0]);
+  const years = [...new Set(yms.map(v => v.slice(0, 4)))].sort();
+  const months = [...new Set(yms.map(v => v.slice(5, 7)))].sort();
+  if (!seasons.includes(dstate.fseason)) dstate.fseason = "";
+  if (!years.includes(dstate.fyear)) dstate.fyear = "";
+  if (!months.includes(dstate.fmonth)) dstate.fmonth = "";
+  fill("d-fseason", seasons, dstate.fseason, "All valid periods");
+  fill("d-fyear", years, dstate.fyear, "All issue years");
+  fill("d-fmonth", months, dstate.fmonth, "All issue months");
+}
+
+// ---------- per-country extremeness panel (sadc products) ----------
+const ISO_NAMES = { AGO: "Angola", BWA: "Botswana", COD: "DR Congo", LSO: "Lesotho",
+  MDG: "Madagascar", MOZ: "Mozambique", MWI: "Malawi", NAM: "Namibia", SWZ: "Eswatini",
+  TZA: "Tanzania", ZAF: "South Africa", ZMB: "Zambia", ZWE: "Zimbabwe" };
+
+async function renderCountryPanel() {
+  const el = document.getElementById("d-country");
+  const p = DMANIFEST.products[dstate.product];
+  if (!dstate.product.startsWith("sadc")) { el.hidden = true; return; }
+  if (!DCOUNTRY) {
+    try { DCOUNTRY = await fetch(assetUrl("data/country_stats.json")).then(r => r.json()); }
+    catch { el.hidden = true; return; }
+  }
+  const skey = p.years[dstate.yi];
+  const rows = (DCOUNTRY[dstate.product] || {})[skey];
+  if (!rows) { el.hidden = true; return; }
+  const sorted = [...rows].sort((a, b) => b[1] - a[1]); // driest-leaning first
+  const maxAbs = Math.max(40, ...sorted.map(r => Math.abs(r[1])));
+  const W = 660, rowH = 22, lab = 92, half = (W - lab - 130) / 2, cx = lab + half;
+  const H = sorted.length * rowH + 26;
+  let svg = `<line x1="${cx}" y1="4" x2="${cx}" y2="${H - 20}" stroke="var(--grid)"/>`;
+  sorted.forEach((r, i) => {
+    const [iso, score, rank, n] = r;
+    const y = 6 + i * rowH;
+    const w = Math.abs(score) / maxAbs * half;
+    const dry = score >= 0;
+    svg += `<text x="${lab - 6}" y="${y + 12}" text-anchor="end">${ISO_NAMES[iso] || iso}</text>
+      <rect x="${dry ? cx : cx - w}" y="${y}" width="${Math.max(w, 1)}" height="14" rx="2"
+        fill="${dry ? "#d0842d" : "#5190d3"}"><title>${ISO_NAMES[iso] || iso} · dryness ${score} · #${rank} driest of ${n} ${p.groups[dstate.yi]} issues</title></rect>
+      <text class="score" x="${dry ? cx + w + 5 : cx - w - 5}" y="${y + 12}" text-anchor="${dry ? "start" : "end"}">${score > 0 ? "+" : ""}${score.toFixed(0)} · #${rank}/${n}</text>`;
+  });
+  svg += `<text x="${cx - 8}" y="${H - 5}" text-anchor="end">← wetter-leaning</text>
+          <text x="${cx + 8}" y="${H - 5}">drier-leaning →</text>`;
+  el.innerHTML = `<h3>Country dryness — ${p.labels[dstate.yi]}</h3>
+    <p class="sub">area-weighted dominant-tercile score per country · #rank = driest among the ${p.groups[dstate.yi]}-target issues in the record (mixed lead times)</p>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px" role="img" aria-label="country dryness ranking">${svg}</svg>`;
+  el.hidden = false;
 }
 
 function cellAt(ev) {
@@ -751,10 +858,18 @@ function renderPin() {
 }
 
 function renderData() {
+  const p = DMANIFEST.products[dstate.product];
+  const [x0, y0, x1, y1] = p.bbox;
+  const ratio = (x1 - x0) / (y1 - y0);
+  const map = document.getElementById("d-map");
+  map.style.aspectRatio = String(ratio);
+  // cap the height of tall domains so the map stays on one screen
+  map.style.width = ratio < 1.6 ? `min(100%, calc(70vh * ${ratio.toFixed(3)}))` : "100%";
   renderYearStrip();
   renderDataCanvas();
   renderOutline();
   renderLegend();
+  renderCountryPanel();
   renderPin();
 }
 
@@ -773,6 +888,7 @@ async function initData() {
     sel.value = dstate.product;
     fetch(assetUrl("data/outline.geojson")).then(r => r.json()).then(gj => {
       DOUTLINE = gj.features.flatMap(f =>
+        !f.geometry ? [] :
         f.geometry.type === "MultiLineString" ? f.geometry.coordinates :
         f.geometry.type === "LineString" ? [f.geometry.coordinates] : []);
       renderOutline();
@@ -780,6 +896,7 @@ async function initData() {
   }
   const p = DMANIFEST.products[dstate.product];
   dstate.yi = Math.min(dstate.yi, p.years.length - 1);
+  populateSliceFilters();
   document.getElementById("d-attrib").textContent = `${p.note} Data: ${p.attribution || DMANIFEST.attribution}.`;
   try { await ensureProduct(dstate.product); }
   catch { note.textContent = "failed to load data tiles"; return; }
@@ -798,6 +915,12 @@ document.getElementById("d-layer").addEventListener("change", e => {
 });
 document.getElementById("d-view").addEventListener("change", e => { dstate.view = e.target.value; renderData(); });
 document.getElementById("d-view").disabled = true; // default layer is "dom"
+for (const [id, key] of [["d-fseason", "fseason"], ["d-fyear", "fyear"], ["d-fmonth", "fmonth"]]) {
+  document.getElementById(id).addEventListener("change", e => {
+    dstate[key] = e.target.value;
+    if (DMANIFEST && DTILES[dstate.product]) renderData();
+  });
+}
 
 const dOverlay = document.getElementById("d-overlay");
 dOverlay.addEventListener("mousemove", ev => {
@@ -847,9 +970,7 @@ document.addEventListener("keydown", e => {
   if (!document.getElementById("view-viewer").hidden) {
     vstate.idx = Math.max(0, vstate.idx + d); renderViewer();
   } else if (!document.getElementById("view-data").hidden && DMANIFEST && DTILES[dstate.product]) {
-    const nY = DMANIFEST.products[dstate.product].years.length;
-    dstate.yi = Math.max(0, Math.min(nY - 1, dstate.yi + d));
-    renderData();
+    stepSlice(d);
   }
 });
 

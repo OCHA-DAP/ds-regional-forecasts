@@ -199,9 +199,10 @@ def make_outline(bbox: list[float]) -> None:
     pad = 1.0
     clipped = gpd.clip(gdf, box(bbox[0] - pad, bbox[1] - pad, bbox[2] + pad, bbox[3] + pad))
     simplified = clipped.geometry.simplify(0.02).boundary
-    simplified[~simplified.is_empty].to_frame("geometry").to_file(
-        OUT / "outline.geojson", driver="GeoJSON"
-    )
+    # clip can leave None/empty geometries; a null geometry in the GeoJSON
+    # crashes the site's outline parser (it fails silently -> no borders)
+    simplified = simplified[simplified.notna() & ~simplified.is_empty]
+    simplified.to_frame("geometry").to_file(OUT / "outline.geojson", driver="GeoJSON")
 
 
 def main() -> None:

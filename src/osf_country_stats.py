@@ -114,8 +114,27 @@ def run() -> pd.DataFrame:
     grp = df.groupby(["system", "skill_masked", "iso3", "season"])
     df["dryness_pct_rank"] = grp["dryness_score"].transform(midrank_pct)
     df["frac_below_pct_rank"] = grp["frac_below"].transform(midrank_pct)
+    df["dry_rank"] = grp["dryness_score"].rank(ascending=False, method="min").astype(int)
     df["n_record"] = grp["dryness_score"].transform("count")
     return df
+
+
+def write_site_json(df: pd.DataFrame) -> None:
+    """Compact per-slice country rankings for the gallery site's Data viewer.
+    Keys match the viewer's slice keys (YYYY-MM_SEAS); MME01 only."""
+    out: dict = {}
+    sub = df[df.system == "MME01"]
+    for _, r in sub.iterrows():
+        product = "sadc-mme" if r.skill_masked else "sadc-mme-full"
+        skey = f"{r.issued:%Y-%m}_{r.season}"
+        out.setdefault(product, {}).setdefault(skey, []).append(
+            [r.iso3, round(float(r.dryness_score), 1), int(r.dry_rank), int(r.n_record),
+             round(float(r.frac_below), 2), round(float(r.frac_above), 2)]
+        )
+    dest = ROOT / "docs" / "data" / "country_stats.json"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(json.dumps(out, separators=(",", ":")))
+    logger.info(f"site json -> {dest} ({dest.stat().st_size // 1024} KB)")
 
 
 if __name__ == "__main__":
@@ -126,6 +145,7 @@ if __name__ == "__main__":
     df.sort_values(["system", "skill_masked", "iso3", "season", "issued"]).to_parquet(
         OUT_DIR / "osf_country_extremeness.parquet", index=False
     )
+    write_site_json(df)
     logger.info(f"{len(df)} rows -> {OUT_DIR}/osf_country_stats.parquet")
 
     latest = df[df.system == "MME01"].sort_values("issued").issued.max()
