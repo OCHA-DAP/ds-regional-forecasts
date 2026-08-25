@@ -134,6 +134,48 @@ def write_site_json(merged: pd.DataFrame) -> None:
     logger.info(f"site json -> {dest} ({dest.stat().st_size // 1024} KB)")
 
 
+SITE_PRODUCTS = {  # site product key -> (system column value, skill_masked)
+    "sadc-mme": ("MME01", True),
+    "sadc-mme-full": ("MME01", False),
+    "seas51": ("SEAS51_SST-PCR", True),
+    "cfsv2": ("CFSv2_SST-PCR", True),
+    "geoss2s": ("GEOSS2S_SST-PCR", True),
+    "ccsm4": ("CCSM4_SST-PCR", True),
+}
+
+
+def write_timeseries_json(osf_all: pd.DataFrame, s5: pd.DataFrame) -> None:
+    """History JSON for the site's Time-series tab, on a shared 0-100
+    "wet-lean" scale (50 = neutral): SEAS5 = percentile of the seasonal
+    forecast vs its 1993-2022 same-issue-month climatology (from 1993 on);
+    OSF = the bounded country dryness score mapped linearly
+    (wetness = 50 - dryness * 50/70). Keys: "<iso3>|<season>|<issue MM>"."""
+    seas5: dict = {}
+    sub = s5[(s5.issued_date.dt.year >= 1993) & s5.seas5_pct.notna()].copy()
+    sub["season"] = sub.apply(
+        lambda r: SEASON_BY_START[(r.issue_month - 1 + r.lead) % 12 + 1], axis=1
+    )
+    for _, r in sub.iterrows():
+        key = f"{r.iso3}|{r.season}|{r.issue_month:02d}"
+        seas5.setdefault(key, {})[str(r.issued_date.year)] = int(round(r.seas5_pct))
+
+    osf: dict = {}
+    for prod, (system, masked) in SITE_PRODUCTS.items():
+        d = osf_all[(osf_all.system == system) & (osf_all.skill_masked == masked)]
+        for _, r in d.iterrows():
+            key = f"{r.iso3}|{r.season}|{r.issued.month:02d}"
+            wet = max(0.0, min(100.0, 50 - float(r.dryness_score) * 50 / 70))
+            osf.setdefault(prod, {}).setdefault(key, {})[str(r.issued.year)] = round(wet, 1)
+
+    dest = ROOT / "docs" / "data" / "timeseries.json"
+    dest.write_text(json.dumps({"seas5": seas5, "osf": osf}, separators=(",", ":")))
+    logger.info(f"site json -> {dest} ({dest.stat().st_size // 1024} KB)")
+
+
+SEASONS_ORDER = ["MJJ", "JJA", "JAS", "ASO", "SON", "OND", "NDJ", "DJF", "JFM", "FMA", "MAM", "AMJ"]
+SEASON_BY_START = {(i + 4) % 12 + 1: s for i, s in enumerate(SEASONS_ORDER)}
+
+
 def osf_category(row) -> str | None:
     fr = {"below": row.frac_below, "normal": row.frac_normal, "above": row.frac_above}
     best = max(fr, key=fr.get)
@@ -141,8 +183,8 @@ def osf_category(row) -> str | None:
 
 
 def main() -> None:
-    osf = pd.read_parquet(NC_DIR / "osf_country_stats.parquet")
-    osf = osf[osf.system == "MME01"].copy()
+    osf_all = pd.read_parquet(NC_DIR / "osf_country_stats.parquet")
+    osf = osf_all[osf_all.system == "MME01"].copy()
     osf["osf_cat"] = osf.apply(osf_category, axis=1)
 
     s5 = add_climatology_rank(seas5_seasonal())
@@ -156,6 +198,7 @@ def main() -> None:
     )
     merged.to_parquet(NC_DIR / "osf_vs_seas5.parquet", index=False)
     write_site_json(merged)
+    write_timeseries_json(osf_all, s5)
     logger.info(f"{len(merged)} rows -> {NC_DIR}/osf_vs_seas5.parquet")
 
     for masked in (False, True):

@@ -141,6 +141,11 @@
   .dcountry .sub { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
   .dcountry svg text { fill: var(--ink-2); font-size: 11px; }
   .dcountry svg .score { fill: var(--ink); }
+  .tsgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px 18px; margin-top: 10px; }
+  .tsfacet { background: var(--surface); border: 1px solid var(--grid); border-radius: 8px; padding: 8px 8px 4px; }
+  .tsfacet h4 { margin: 0 0 4px 4px; font-size: 12.5px; font-weight: 600; }
+  .tsfacet svg { display: block; width: 100%; }
+  .tsfacet svg text { fill: var(--muted); font-size: 9px; }
   .dmap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #d-canvas { image-rendering: pixelated; }
   #d-overlay { cursor: crosshair; }
@@ -180,6 +185,7 @@
     <button class="tab" role="tab" id="tab-gallery" aria-selected="true">Gallery</button>
     <button class="tab" role="tab" id="tab-viewer" aria-selected="false">Year viewer</button>
     <button class="tab" role="tab" id="tab-data" aria-selected="false">Data viewer</button>
+    <button class="tab" role="tab" id="tab-ts" aria-selected="false">Time series</button>
   </div>
 
   <section id="view-data" class="viewer" hidden>
@@ -214,6 +220,29 @@
     <p class="vhint">Rainfall tercile probabilities on each product's digitization grid · hover for values ·
       click a cell to pin its forecast history · ←/→ step through issues</p>
     <p class="vhint" id="d-attrib"></p>
+  </section>
+
+  <section id="view-ts" class="viewer" hidden>
+    <div class="vfilters">
+      <select id="ts-product">
+        <option value="sadc-mme">SADC CSC MME (skill-masked)</option>
+        <option value="sadc-mme-full">SADC CSC MME (unmasked)</option>
+        <option value="seas51">SEAS51 (CSC-calibrated, SST)</option>
+        <option value="cfsv2">CFSv2 (CSC-calibrated, SST)</option>
+        <option value="geoss2s">GEOSS2S (CSC-calibrated, SST)</option>
+        <option value="ccsm4">CCSM4 (CSC-calibrated, SST)</option>
+      </select>
+      <select id="ts-season"></select>
+      <select id="ts-month"></select>
+      <span class="count" id="ts-note"></span>
+    </div>
+    <div class="dlegend" id="ts-legend"></div>
+    <div class="tsgrid" id="ts-grid"></div>
+    <p class="vhint">Both series on a shared 0–100 wet-lean scale (50 = neutral, band = middle tercile).
+      <strong>Raw SEAS5</strong>: percentile of the country's seasonal forecast within its own 1993–2022
+      same-issue-month climatology. <strong>Regional product</strong>: the digitized country dryness score
+      mapped linearly (±70 → 0/100) — an absolute lean, not a percentile, so a product that systematically
+      floats above the SEAS5 line is wet-biased relative to SEAS5. Hover points for values.</p>
   </section>
 
   <section id="view-viewer" class="viewer" hidden>
@@ -799,17 +828,20 @@ async function renderCountryPanel() {
     const s5 = s5ref[iso];
     if (s5) {
       const [pct, val, skill] = s5;
-      svg += `<text x="${s5x}" y="${y + 12}">p${pct} · ρ ${skill == null ? "–" : skill.toFixed(2)}<title>SEAS5 ${val} mm/day · ${pct}th percentile of 1993–2022 same-issue-month climatology · skill ρ vs ERA5 obs</title></text>`;
+      const pc = Math.max(1.5, Math.min(98.5, pct));
+      const s5dry = pct < 50;
+      const s5rp = s5dry ? 100 / pc : 100 / (100 - pc);
+      svg += `<text x="${s5x}" y="${y + 12}">RP ${fmtRP(s5rp)} ${s5dry ? "dry" : "wet"} · ρ ${skill == null ? "–" : skill.toFixed(2)}<title>SEAS5 ${val} mm/day · ${pct}th percentile of 1993–2022 same-issue-month climatology · skill ρ vs ERA5 obs</title></text>`;
     }
   });
   svg += `<text x="${cx - 8}" y="${H - 5}" text-anchor="end">← wetter-leaning</text>
           <text x="${cx + 8}" y="${H - 5}">drier-leaning →</text>
-          <text x="${s5x}" y="${H - 5}">SEAS5 %ile · skill</text>`;
+          <text x="${s5x}" y="${H - 5}">SEAS5 RP · skill</text>`;
   el.innerHTML = `<h3>Country dryness — ${p.labels[dstate.yi]}</h3>
     <p class="sub">area-weighted dominant-tercile score per country · RP = Weibull return period of this issue's
       dry/wet lean within the ${nRec ?? "few"} ${p.groups[dstate.yi]}-target issues archived (short record — rough, mixed lead times)
-      · SEAS5 column: same-period raw SEAS5 country forecast as a percentile of its 1993–2022 climatology, with its
-      Spearman skill vs ERA5 observations for this country / issue month / lead</p>
+      · SEAS5 column: return period of the same-period raw SEAS5 country forecast within its 1993–2022 climatology
+      (hover for percentile and mm/day), with SEAS5's Spearman skill vs ERA5 observations for this country / issue month / lead</p>
     <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px" role="img" aria-label="country dryness ranking with SEAS5 reference">${svg}</svg>`;
   el.hidden = false;
 }
@@ -983,8 +1015,101 @@ dOverlay.addEventListener("click", ev => {
 new ResizeObserver(() => { if (!document.getElementById("view-data").hidden) renderOutline(); })
   .observe(document.getElementById("d-map"));
 
+// ---------- Time series (country history: regional product vs raw SEAS5) ----------
+const tstate = { product: "sadc-mme", season: "OND", month: "" };
+let TSDATA = null;
+const TS_OSF_C = "#12917f", TS_S5_C = "#eb6834";
+
+async function initTS() {
+  const note = document.getElementById("ts-note");
+  if (!TSDATA) {
+    note.textContent = "loading…";
+    try { TSDATA = await fetch(assetUrl("data/timeseries.json")).then(r => r.json()); }
+    catch { note.textContent = "time-series data unavailable (token issuer unreachable)"; return; }
+    note.textContent = "";
+  }
+  populateTSFilters();
+  renderTS();
+}
+
+function tsMonths() {
+  // issue months for which the chosen product has any data for this season
+  const prod = TSDATA.osf[tstate.product] || {};
+  const months = new Set();
+  for (const key in prod) {
+    const [, seas, mm] = key.split("|");
+    if (seas === tstate.season) months.add(mm);
+  }
+  return [...months].sort();
+}
+
+function populateTSFilters() {
+  const seasons = ["MJJ","JJA","JAS","ASO","SON","OND","NDJ","DJF","JFM","FMA","MAM","AMJ"]
+    .filter(s => Object.keys(TSDATA.osf[tstate.product] || {}).some(k => k.split("|")[1] === s));
+  if (!seasons.includes(tstate.season)) tstate.season = seasons.includes("OND") ? "OND" : seasons[0];
+  const months = tsMonths();
+  if (!months.includes(tstate.month)) tstate.month = months[months.length - 1] || "";
+  const monName = mm => ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+mm - 1];
+  document.getElementById("ts-season").innerHTML =
+    seasons.map(s => `<option value="${s}"${s === tstate.season ? " selected" : ""}>valid ${s}</option>`).join("");
+  document.getElementById("ts-month").innerHTML =
+    months.map(m => `<option value="${m}"${m === tstate.month ? " selected" : ""}>issued ${monName(m)}</option>`).join("");
+}
+
+function renderTS() {
+  const grid = document.getElementById("ts-grid");
+  const legend = document.getElementById("ts-legend");
+  const prodLabel = document.querySelector(`#ts-product option[value="${tstate.product}"]`).textContent;
+  legend.innerHTML = `
+    <span class="chip"><i style="background:${TS_OSF_C}"></i>${prodLabel}</span>
+    <span class="chip"><i style="background:${TS_S5_C}"></i>raw SEAS5 (percentile vs 1993–2022)</span>`;
+  const Y0 = 1993, Y1 = 2027;
+  const W = 260, H = 118, mL = 24, mR = 6, mT = 6, mB = 16;
+  const xs = yr => mL + (yr - Y0) / (Y1 - Y0) * (W - mL - mR);
+  const ys = v => mT + (100 - v) / 100 * (H - mT - mB);
+  const prod = TSDATA.osf[tstate.product] || {};
+  grid.innerHTML = "";
+  for (const iso of Object.keys(ISO_NAMES).sort((a, b) => (ISO_NAMES[a]).localeCompare(ISO_NAMES[b]))) {
+    const key = `${iso}|${tstate.season}|${tstate.month}`;
+    const s5 = TSDATA.seas5[key] || {};
+    const osf = prod[key] || {};
+    let svg = `<rect x="${mL}" y="${ys(66.7)}" width="${W - mL - mR}" height="${ys(33.3) - ys(66.7)}" fill="var(--grid)" opacity="0.35"/>
+      <line x1="${mL}" y1="${ys(50)}" x2="${W - mR}" y2="${ys(50)}" stroke="var(--grid)"/>
+      <text x="${mL - 3}" y="${ys(66.7) + 3}" text-anchor="end">67</text>
+      <text x="${mL - 3}" y="${ys(33.3) + 3}" text-anchor="end">33</text>
+      <text x="${mL - 3}" y="${ys(100) + 6}" text-anchor="end">wet</text>
+      <text x="${mL - 3}" y="${ys(0)}" text-anchor="end">dry</text>`;
+    for (const yr of [1995, 2005, 2015, 2025]) {
+      svg += `<text x="${xs(yr)}" y="${H - 3}" text-anchor="middle">${yr}</text>`;
+    }
+    const s5pts = Object.keys(s5).sort().map(y => [+y, s5[y]]);
+    if (s5pts.length) {
+      svg += `<polyline fill="none" stroke="${TS_S5_C}" stroke-width="1.3" opacity="0.85"
+        points="${s5pts.map(([y, v]) => `${xs(y).toFixed(1)},${ys(v).toFixed(1)}`).join(" ")}"/>`;
+      svg += s5pts.map(([y, v]) =>
+        `<circle cx="${xs(y).toFixed(1)}" cy="${ys(v).toFixed(1)}" r="2" fill="${TS_S5_C}"><title>SEAS5 ${y}: p${v}</title></circle>`).join("");
+    }
+    const opts = Object.keys(osf).sort().map(y => [+y, osf[y]]);
+    if (opts.length) {
+      if (opts.length > 1) svg += `<polyline fill="none" stroke="${TS_OSF_C}" stroke-width="2"
+        points="${opts.map(([y, v]) => `${xs(y).toFixed(1)},${ys(v).toFixed(1)}`).join(" ")}"/>`;
+      svg += opts.map(([y, v]) =>
+        `<circle cx="${xs(y).toFixed(1)}" cy="${ys(v).toFixed(1)}" r="3.5" fill="${TS_OSF_C}" stroke="var(--surface)" stroke-width="1.5"><title>${prodLabel} ${y}: wet-lean ${v}</title></circle>`).join("");
+    }
+    const el = document.createElement("div");
+    el.className = "tsfacet";
+    el.innerHTML = `<h4>${ISO_NAMES[iso]}</h4>
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${ISO_NAMES[iso]} forecast history">${svg}</svg>`;
+    grid.appendChild(el);
+  }
+}
+
+document.getElementById("ts-product").addEventListener("change", e => { tstate.product = e.target.value; populateTSFilters(); renderTS(); });
+document.getElementById("ts-season").addEventListener("change", e => { tstate.season = e.target.value; populateTSFilters(); renderTS(); });
+document.getElementById("ts-month").addEventListener("change", e => { tstate.month = e.target.value; renderTS(); });
+
 // ---------- tabs ----------
-const TAB_IDS = ["gallery", "viewer", "data"];
+const TAB_IDS = ["gallery", "viewer", "data", "ts"];
 function showTab(which) {
   for (const t of TAB_IDS) {
     document.getElementById("view-" + t).hidden = t !== which;
@@ -992,6 +1117,7 @@ function showTab(which) {
   }
   if (which === "viewer") initViewer();
   if (which === "data") initData();
+  if (which === "ts") initTS();
 }
 TAB_IDS.forEach(t => document.getElementById("tab-" + t).addEventListener("click", () => showTab(t)));
 document.addEventListener("keydown", e => {

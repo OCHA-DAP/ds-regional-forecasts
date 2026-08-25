@@ -40,7 +40,8 @@ if __name__ == "__main__":
             blob_name = f"{PROJECT_PREFIX}/{prefix}/{f.relative_to(local_dir)}"
             # derived data + small index files change under constant names
             mutable = prefix == "processed" or f.name in (
-                "manifest.json", "outline.geojson", "country_stats.json", "seas5_ref.json"
+                "manifest.json", "outline.geojson",
+                "country_stats.json", "seas5_ref.json", "timeseries.json",
             )
             if blob_name in existing and not mutable:
                 n_skip += 1
