@@ -122,7 +122,11 @@ Downstream of the digitized stacks (all since 2026-08-24):
   product). Prints the latest MME01 issue's ranking.
 - **`src/compare_osf_seas5.py`**: joins each country-slice to raw SEAS5 adm0
   seasonal means (prod DB `public.seas5`, PGSSLMODE=require) ranked against
-  1993–2022 same-issue-month climatology. Headline (2023-06→2026-04, 910
+  1993–2022 same-issue-month climatology, computes per-(country, issue
+  month, lead) SEAS5 Spearman skill vs ERA5 obs (`public.era5`), and exports
+  the site's `seas5_ref.json` (country-panel SEAS5 RP + skill column) and
+  `timeseries.json` (Time-series tab: SEAS5 percentile history 1993+ and
+  all six digitized products' country dryness as a 0–100 wet-lean index). Headline (2023-06→2026-04, 910
   unmasked slices): the CSC MME leans above-normal in ~76% of slices vs
   SEAS5's ~29% — a strong wet lean relative to raw SEAS5 for identical
   periods; when the MME does say below-normal there is real signal (SEAS5
