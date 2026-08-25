@@ -233,7 +233,7 @@
         <option value="ccsm4">CCSM4 (CSC-calibrated, SST)</option>
       </select>
       <select id="ts-season"></select>
-      <select id="ts-month"></select>
+      <div id="ts-months" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
       <span class="count" id="ts-note"></span>
     </div>
     <div class="dlegend" id="ts-legend"></div>
@@ -1016,9 +1016,15 @@ new ResizeObserver(() => { if (!document.getElementById("view-data").hidden) ren
   .observe(document.getElementById("d-map"));
 
 // ---------- Time series (country history: regional product vs raw SEAS5) ----------
-const tstate = { product: "sadc-mme", season: "OND", month: "" };
+const tstate = { product: "sadc-mme", season: "OND", months: null }; // months: Set of "MM"
 let TSDATA = null;
-const TS_OSF_C = "#12917f", TS_S5_C = "#eb6834";
+// light -> dark = longer -> shorter lead ("issued closer to the season")
+const TS_OSF_RAMP = ["#8ecec1", "#5bb6a4", "#2fa38e", "#12917f", "#0a6c5e"];
+const TS_S5_RAMP = ["#f6b993", "#f29d69", "#ee8244", "#e2661f", "#bb5316"];
+const TS_SEASONS = ["MJJ","JJA","JAS","ASO","SON","OND","NDJ","DJF","JFM","FMA","MAM","AMJ"];
+const tsSeasonStart = s => (TS_SEASONS.indexOf(s) + 4) % 12 + 1;
+const tsLead = mm => (tsSeasonStart(tstate.season) - (+mm) + 12) % 12;
+const MON_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 async function initTS() {
   const note = document.getElementById("ts-note");
@@ -1044,25 +1050,49 @@ function tsMonths() {
 }
 
 function populateTSFilters() {
-  const seasons = ["MJJ","JJA","JAS","ASO","SON","OND","NDJ","DJF","JFM","FMA","MAM","AMJ"]
+  const seasons = TS_SEASONS
     .filter(s => Object.keys(TSDATA.osf[tstate.product] || {}).some(k => k.split("|")[1] === s));
   if (!seasons.includes(tstate.season)) tstate.season = seasons.includes("OND") ? "OND" : seasons[0];
-  const months = tsMonths();
-  if (!months.includes(tstate.month)) tstate.month = months[months.length - 1] || "";
-  const monName = mm => ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+mm - 1];
+  const months = tsMonths().sort((a, b) => tsLead(b) - tsLead(a)); // longest lead first
+  if (!tstate.months || ![...tstate.months].some(m => months.includes(m))) {
+    tstate.months = new Set(months); // default: all issue months of this season
+  } else {
+    tstate.months = new Set([...tstate.months].filter(m => months.includes(m)));
+  }
   document.getElementById("ts-season").innerHTML =
     seasons.map(s => `<option value="${s}"${s === tstate.season ? " selected" : ""}>valid ${s}</option>`).join("");
-  document.getElementById("ts-month").innerHTML =
-    months.map(m => `<option value="${m}"${m === tstate.month ? " selected" : ""}>issued ${monName(m)}</option>`).join("");
+  const wrap = document.getElementById("ts-months");
+  wrap.innerHTML = "";
+  months.forEach(m => {
+    const b = document.createElement("button");
+    b.className = "orgbtn";
+    b.setAttribute("aria-pressed", tstate.months.has(m));
+    b.innerHTML = `<span class="dot" style="background:${TS_OSF_RAMP[tsRampIdx(m, months)]}"></span>issued ${MON_NAMES[+m - 1]}`;
+    b.onclick = () => {
+      if (tstate.months.has(m) && tstate.months.size > 1) tstate.months.delete(m);
+      else tstate.months.add(m);
+      populateTSFilters(); renderTS();
+    };
+    wrap.appendChild(b);
+  });
+}
+
+// ramp index for a month among the season's available months (light = long lead)
+function tsRampIdx(m, months) {
+  const i = months.indexOf(m), k = months.length;
+  return k <= 1 ? 3 : Math.round(i * 4 / (k - 1));
 }
 
 function renderTS() {
   const grid = document.getElementById("ts-grid");
   const legend = document.getElementById("ts-legend");
   const prodLabel = document.querySelector(`#ts-product option[value="${tstate.product}"]`).textContent;
+  const monthsAll = tsMonths().sort((a, b) => tsLead(b) - tsLead(a));
+  const sel = monthsAll.filter(m => tstate.months.has(m));
   legend.innerHTML = `
-    <span class="chip"><i style="background:${TS_OSF_C}"></i>${prodLabel}</span>
-    <span class="chip"><i style="background:${TS_S5_C}"></i>raw SEAS5 (percentile vs 1993–2022)</span>`;
+    <span class="chip"><i style="background:${TS_OSF_RAMP[3]}"></i>${prodLabel}</span>
+    <span class="chip"><i style="background:${TS_S5_RAMP[3]}"></i>raw SEAS5 (percentile vs 1993–2022)</span>
+    ${sel.length > 1 ? `<span>· darker = issued closer to the season (${sel.map(m => MON_NAMES[+m - 1]).join(", ")})</span>` : ""}`;
   const Y0 = 1993, Y1 = 2027;
   const W = 260, H = 118, mL = 24, mR = 6, mT = 6, mB = 16;
   const xs = yr => mL + (yr - Y0) / (Y1 - Y0) * (W - mL - mR);
@@ -1070,9 +1100,6 @@ function renderTS() {
   const prod = TSDATA.osf[tstate.product] || {};
   grid.innerHTML = "";
   for (const iso of Object.keys(ISO_NAMES).sort((a, b) => (ISO_NAMES[a]).localeCompare(ISO_NAMES[b]))) {
-    const key = `${iso}|${tstate.season}|${tstate.month}`;
-    const s5 = TSDATA.seas5[key] || {};
-    const osf = prod[key] || {};
     let svg = `<rect x="${mL}" y="${ys(66.7)}" width="${W - mL - mR}" height="${ys(33.3) - ys(66.7)}" fill="var(--grid)" opacity="0.35"/>
       <line x1="${mL}" y1="${ys(50)}" x2="${W - mR}" y2="${ys(50)}" stroke="var(--grid)"/>
       <text x="${mL - 3}" y="${ys(66.7) + 3}" text-anchor="end">67</text>
@@ -1082,19 +1109,28 @@ function renderTS() {
     for (const yr of [1995, 2005, 2015, 2025]) {
       svg += `<text x="${xs(yr)}" y="${H - 3}" text-anchor="middle">${yr}</text>`;
     }
-    const s5pts = Object.keys(s5).sort().map(y => [+y, s5[y]]);
-    if (s5pts.length) {
-      svg += `<polyline fill="none" stroke="${TS_S5_C}" stroke-width="1.3" opacity="0.85"
-        points="${s5pts.map(([y, v]) => `${xs(y).toFixed(1)},${ys(v).toFixed(1)}`).join(" ")}"/>`;
-      svg += s5pts.map(([y, v]) =>
-        `<circle cx="${xs(y).toFixed(1)}" cy="${ys(v).toFixed(1)}" r="2" fill="${TS_S5_C}"><title>SEAS5 ${y}: p${v}</title></circle>`).join("");
+    // SEAS5 lines first (under), then OSF, each light->dark by shortening lead
+    for (const m of sel) {
+      const ci = tsRampIdx(m, monthsAll), lead = tsLead(m), mon = MON_NAMES[+m - 1];
+      const s5 = TSDATA.seas5[`${iso}|${tstate.season}|${m}`] || {};
+      const s5pts = Object.keys(s5).sort().map(y => [+y, s5[y]]);
+      if (s5pts.length) {
+        svg += `<polyline fill="none" stroke="${TS_S5_RAMP[ci]}" stroke-width="1.2" opacity="0.85"
+          points="${s5pts.map(([y, v]) => `${xs(y).toFixed(1)},${ys(v).toFixed(1)}`).join(" ")}"/>`;
+        svg += s5pts.map(([y, v]) =>
+          `<circle cx="${xs(y).toFixed(1)}" cy="${ys(v).toFixed(1)}" r="1.8" fill="${TS_S5_RAMP[ci]}"><title>SEAS5 issued ${mon} ${y} (lead ${lead}): p${v}</title></circle>`).join("");
+      }
     }
-    const opts = Object.keys(osf).sort().map(y => [+y, osf[y]]);
-    if (opts.length) {
-      if (opts.length > 1) svg += `<polyline fill="none" stroke="${TS_OSF_C}" stroke-width="2"
-        points="${opts.map(([y, v]) => `${xs(y).toFixed(1)},${ys(v).toFixed(1)}`).join(" ")}"/>`;
-      svg += opts.map(([y, v]) =>
-        `<circle cx="${xs(y).toFixed(1)}" cy="${ys(v).toFixed(1)}" r="3.5" fill="${TS_OSF_C}" stroke="var(--surface)" stroke-width="1.5"><title>${prodLabel} ${y}: wet-lean ${v}</title></circle>`).join("");
+    for (const m of sel) {
+      const ci = tsRampIdx(m, monthsAll), lead = tsLead(m), mon = MON_NAMES[+m - 1];
+      const osf = prod[`${iso}|${tstate.season}|${m}`] || {};
+      const opts = Object.keys(osf).sort().map(y => [+y, osf[y]]);
+      if (opts.length) {
+        if (opts.length > 1) svg += `<polyline fill="none" stroke="${TS_OSF_RAMP[ci]}" stroke-width="1.8"
+          points="${opts.map(([y, v]) => `${xs(y).toFixed(1)},${ys(v).toFixed(1)}`).join(" ")}"/>`;
+        svg += opts.map(([y, v]) =>
+          `<circle cx="${xs(y).toFixed(1)}" cy="${ys(v).toFixed(1)}" r="3.2" fill="${TS_OSF_RAMP[ci]}" stroke="var(--surface)" stroke-width="1.3"><title>${prodLabel} issued ${mon} ${y} (lead ${lead}): wet-lean ${v}</title></circle>`).join("");
+      }
     }
     const el = document.createElement("div");
     el.className = "tsfacet";
@@ -1105,8 +1141,7 @@ function renderTS() {
 }
 
 document.getElementById("ts-product").addEventListener("change", e => { tstate.product = e.target.value; populateTSFilters(); renderTS(); });
-document.getElementById("ts-season").addEventListener("change", e => { tstate.season = e.target.value; populateTSFilters(); renderTS(); });
-document.getElementById("ts-month").addEventListener("change", e => { tstate.month = e.target.value; renderTS(); });
+document.getElementById("ts-season").addEventListener("change", e => { tstate.season = e.target.value; tstate.months = null; populateTSFilters(); renderTS(); });
 
 // ---------- tabs ----------
 const TAB_IDS = ["gallery", "viewer", "data", "ts"];
