@@ -18,6 +18,7 @@ country x issue x season x masked-variant, both products' categories) +
 printed headline stats.
 """
 
+import json
 import logging
 from pathlib import Path
 
@@ -78,6 +79,61 @@ def add_climatology_rank(s5: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([s5, s5.apply(rank, axis=1)], axis=1)
 
 
+def era5_seasonal() -> pd.DataFrame:
+    """(iso3, season start date) -> observed 3-month-mean precip (ERA5 adm0)."""
+    engine = stratus.get_engine(stage="prod")
+    q = f"""
+        SELECT iso3, valid_date, mean
+        FROM public.era5
+        WHERE adm_level = 0 AND iso3 IN ({",".join(f"'{i}'" for i in ISO3S)})
+    """
+    df = pd.read_sql(q, engine, parse_dates=["valid_date"])
+    df = df.set_index(["iso3", "valid_date"])["mean"].sort_index()
+    rows = []
+    for iso in ISO3S:
+        s = df.loc[iso]
+        val = (s + s.shift(-1) + s.shift(-2)) / 3  # mean of months m, m+1, m+2
+        rows.append(pd.DataFrame({"iso3": iso, "start_date": val.index, "obs_value": val.values}))
+    return pd.concat(rows, ignore_index=True).dropna()
+
+
+def seas5_skill(s5: pd.DataFrame) -> pd.DataFrame:
+    """Spearman rank correlation of SEAS5 seasonal forecasts vs ERA5 observed
+    seasonal precip, per (iso3, issue month, lead), across all years with both.
+    The team's usual 'can you trust SEAS5 here for this season/lead' number."""
+    obs = era5_seasonal()
+    s5 = s5.copy()
+    s5["start_date"] = s5.apply(
+        lambda r: r.issued_date + pd.DateOffset(months=int(r.lead)), axis=1
+    )
+    m = s5.merge(obs, on=["iso3", "start_date"], how="inner")
+    out = []
+    for (iso, mon, lead), g in m.groupby(["iso3", "issue_month", "lead"]):
+        if len(g) < 20:
+            continue
+        rho = g.seas5_value.rank().corr(g.obs_value.rank())
+        out.append({"iso3": iso, "issue_month": mon, "lead": lead, "seas5_skill": round(float(rho), 2)})
+    return pd.DataFrame(out)
+
+
+def write_site_json(merged: pd.DataFrame) -> None:
+    """Per-slice SEAS5 reference for the site's country panel: percentile of
+    the same-period SEAS5 country forecast vs 1993-2022 climatology, raw
+    value (mm/day), and the country/issue-month/lead skill."""
+    out: dict = {}
+    sub = merged[~merged.skill_masked].dropna(subset=["seas5_pct"])
+    for _, r in sub.iterrows():
+        skey = f"{r.issued:%Y-%m}_{r.season}"
+        out.setdefault(skey, {})[r.iso3] = [
+            int(round(r.seas5_pct)),
+            round(float(r.seas5_value), 2),
+            None if pd.isna(r.seas5_skill) else float(r.seas5_skill),
+        ]
+    dest = ROOT / "docs" / "data" / "seas5_ref.json"
+    dest.write_text(json.dumps(out, separators=(",", ":")))
+    logger.info(f"site json -> {dest} ({dest.stat().st_size // 1024} KB)")
+
+
 def osf_category(row) -> str | None:
     fr = {"below": row.frac_below, "normal": row.frac_normal, "above": row.frac_above}
     best = max(fr, key=fr.get)
@@ -90,6 +146,8 @@ def main() -> None:
     osf["osf_cat"] = osf.apply(osf_category, axis=1)
 
     s5 = add_climatology_rank(seas5_seasonal())
+    skill = seas5_skill(s5)
+    s5 = s5.merge(skill, on=["iso3", "issue_month", "lead"], how="left")
     merged = osf.merge(
         s5.rename(columns={"issued_date": "issued"}),
         on=["iso3", "issued", "lead"],
@@ -97,6 +155,7 @@ def main() -> None:
         validate="many_to_one",
     )
     merged.to_parquet(NC_DIR / "osf_vs_seas5.parquet", index=False)
+    write_site_json(merged)
     logger.info(f"{len(merged)} rows -> {NC_DIR}/osf_vs_seas5.parquet")
 
     for masked in (False, True):
