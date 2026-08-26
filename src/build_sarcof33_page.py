@@ -70,8 +70,7 @@ def boundary_px(scale: int, lon0=10.0, lat0=8.0):
     return np.array(pts)
 
 
-def render_sarcof(ds: xr.Dataset, season: str, scale=5) -> Image.Image:
-    sel = ds.sel(season=season)
+def render_sarcof(sel: xr.Dataset, scale=5) -> Image.Image:
     cls = sel["clazz"].values
     conf = sel["confidence"].values
     h, w = cls.shape
@@ -117,7 +116,8 @@ def prior_images(season: str) -> list[tuple[str, str]]:
     return out
 
 
-def facet_svg(iso: str, season: str, s5: dict, mme: list, newv: float | None) -> str:
+def facet_svg(iso: str, season: str, s5: dict, mme: list, newv: float | None,
+              prior: list | None = None) -> str:
     Y0, Y1, W, H, mL, mR, mT, mB = 1993, 2027.6, 300, 130, 26, 6, 6, 16
     xs = lambda yr: mL + (yr - Y0) / (Y1 - Y0) * (W - mL - mR)
     ys = lambda v: mT + (100 - v) / 100 * (H - mT - mB)
@@ -136,6 +136,10 @@ def facet_svg(iso: str, season: str, s5: dict, mme: list, newv: float | None) ->
         s += "".join(f'<circle cx="{xs(y):.1f}" cy="{ys(v):.1f}" r="{3 if y == 2026 else 1.8}" fill="{S5_C}"><title>SEAS5 {y}: p{v}</title></circle>' for y, v in pts)
     for y, v, mm in mme:
         s += f'<circle cx="{xs(int(y)):.1f}" cy="{ys(v):.1f}" r="3" fill="{OSF_C}" stroke="#fff" stroke-width="1"><title>MME issued {y}-{mm}: wet-lean {v}</title></circle>'
+    for y, v, vintage in (prior or []):
+        x, yy_ = xs(y + 0.35), ys(v)
+        s += (f'<path d="M {x:.1f} {yy_ - 5:.1f} L {x + 4.3:.1f} {yy_:.1f} L {x:.1f} {yy_ + 5:.1f} L {x - 4.3:.1f} {yy_:.1f} Z" '
+              f'fill="none" stroke="{NEW_C}" stroke-width="1.4"><title>SARCOF consensus {vintage}: wet-lean {v:.0f}</title></path>')
     if newv is not None:
         x, y = xs(2026.35), ys(newv)
         s += f'<path d="M {x} {y - 6} L {x + 5.2} {y} L {x} {y + 6} L {x - 5.2} {y} Z" fill="{NEW_C}" stroke="#fff" stroke-width="1"><title>SARCOF-33 consensus: wet-lean {newv:.0f}</title></path>'
@@ -144,17 +148,24 @@ def facet_svg(iso: str, season: str, s5: dict, mme: list, newv: float | None) ->
 
 
 def main() -> None:
-    ds = xr.open_dataset(ROOT / "data" / "processed" / "sarcof33" / "sarcof33_photo_digitized.nc")
-    stats = pd.read_parquet(ROOT / "data" / "processed" / "sarcof33" / "sarcof33_country_stats.parquet")
-    stats["wetlean"] = 50 - stats.dryness_score * 50 / 70
+    cons = xr.open_dataset(ROOT / "data" / "processed" / "sarcof-consensus" / "sarcof_consensus.nc")
+    cstats = pd.read_parquet(ROOT / "data" / "processed" / "sarcof-consensus" / "sarcof_consensus_country_stats.parquet")
+    cstats["wetlean"] = 50 - cstats.dryness_score * 50 / 70
     ts = json.loads((ROOT / "docs" / "data" / "timeseries.json").read_text())
 
     sections = []
     for season in SEASONS:
-        figs = [f'<figure><img src="{b64(render_sarcof(ds, season))}" alt="SARCOF-33 {season}">'
-                f'<figcaption><strong>SARCOF-33 consensus · {SEASON_LABEL[season]}</strong> · digitized from forum slides</figcaption></figure>']
-        for cap, src in prior_images(season):
-            figs.append(f'<figure><img src="{src}" alt="{cap}"><figcaption>{cap}</figcaption></figure>')
+        figs = []
+        for vintage in [str(v) for v in cons.vintage.values][::-1]:  # newest first
+            sel = cons.sel(vintage=vintage, season=season)
+            if int((sel["clazz"].values >= 0).sum()) == 0:
+                continue  # season not drawn that year
+            is_new = vintage == "2026/27"
+            src_note = "digitized from forum slides (photos)" if is_new else "digitized from the statement PDF"
+            title = f"SARCOF-33 consensus · {SEASON_LABEL[season]}" if is_new else f"Consensus {season} {vintage}"
+            figs.append(
+                f'<figure{" class=hl" if is_new else ""}><img src="{b64(render_sarcof(sel))}" alt="{title}">'
+                f'<figcaption><strong>{title}</strong> · {src_note}</figcaption></figure>')
         facets = []
         for iso in sorted(ISO_NAMES, key=ISO_NAMES.get):
             mm = S5_MONTH[season]
@@ -164,9 +175,15 @@ def main() -> None:
                 k_iso, k_seas, k_mm = key.split("|")
                 if k_iso == iso and k_seas == season:
                     mme += [(y, v, k_mm) for y, v in series.items()]
-            row = stats[(stats.iso3 == iso) & (stats.season == season)]
-            newv = float(row.wetlean.iloc[0]) if len(row) else None
-            facets.append(facet_svg(iso, season, s5, mme, newv))
+            sub = cstats[(cstats.iso3 == iso) & (cstats.season == season)]
+            newv, prior = None, []
+            for _, r in sub.iterrows():
+                # plot at ISSUE year — same convention as the SEAS5/MME series
+                if r.vintage == "2026/27":
+                    newv = float(r.wetlean)
+                else:
+                    prior.append((int(r.issued[:4]), float(r.wetlean), r.vintage))
+            facets.append(facet_svg(iso, season, s5, mme, newv, prior))
         sections.append(f"""
   <section>
     <h2>{SEASON_LABEL[season]}</h2>
@@ -174,15 +191,17 @@ def main() -> None:
     <div class="grid">{''.join(facets)}</div>
     <p class="note">SEAS5 line: issued month {S5_MONTH[season]}, percentile vs 1993–2022 climatology
       (large dot = the current 2026 issue{'' if season != 'JFM' else ' — not yet available for JFM from a September issue'}).
-      Teal dots: archived CSC MME issues (all issue months, wet-lean 0–100). Magenta diamond: this
-      SARCOF-33 consensus zone score mapped to the same scale.</p>
+      Teal dots: archived CSC MME issues (all issue months, wet-lean 0–100). Filled magenta diamond: this
+      SARCOF-33 consensus zone score; hollow magenta diamonds: prior years' consensus outlooks
+      (digitized from the statement PDFs), plotted at their target year.</p>
   </section>""")
 
     legend = "".join(
         f'<span class="chip"><i style="background:rgb{PAL[c]}"></i>{CLASS_LABEL[c]}</span>' for c in PAL
     ) + f'<span class="chip"><i style="background:{S5_C}"></i>raw SEAS5</span>' \
         f'<span class="chip"><i style="background:{OSF_C}"></i>CSC MME archive</span>' \
-        f'<span class="chip"><i style="background:{NEW_C}"></i>SARCOF-33 consensus</span>'
+        f'<span class="chip"><i style="background:{NEW_C}"></i>SARCOF-33 consensus</span>' \
+        f'<span class="chip"><i style="background:#fff;border:1.5px solid {NEW_C}"></i>prior consensus vintages</span>'
 
     html = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -198,6 +217,7 @@ def main() -> None:
   .maps {{ display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; }}
   figure {{ margin: 0; flex: 0 0 auto; width: 265px; }}
   figure img {{ width: 100%; border: 1px solid #e1e0d9; border-radius: 6px; background: #fff; }}
+  figure.hl img {{ border: 2px solid #b3266d; }}
   figcaption {{ font-size: 12px; color: #52514e; margin-top: 3px; }}
   .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px 16px; margin-top: 14px; }}
   .facet {{ background: #ffffff; border: 1px solid #e1e0d9; border-radius: 8px; padding: 6px 6px 2px; }}
@@ -210,8 +230,11 @@ def main() -> None:
   .note {{ font-size: 12.5px; color: #52514e; }}
 </style></head><body><main>
   <h1>SARCOF-33 seasonal outlook — 2026/27 rainfall season</h1>
-  <p class="note">Digitized from photos of the forum presentation (Aug 2026) by OCHA CHD Data Science ·
-    grid 0.25°, class zones; dotted texture = high-confidence overlay (experimental detection).</p>
+  <p class="note">Digitized by OCHA CHD Data Science — SARCOF-33 from photos of the forum presentation
+    (Aug 2026), prior vintages (2017/18–2025/26, gaps 2018/19 &amp; 2022/23) from the official statement
+    PDFs · grid 0.25°, class zones; dotted texture = high-confidence overlay (experimental detection).
+    Per the statement legends each class is a tercile-probability triplet (A/N/B): Above-Normal 40/35/25,
+    Normal-to-Above 35/40/25, Normal-to-Below 25/40/35, Below-Normal 25/35/40.</p>
   <div class="warn"><strong>Pre-publication material.</strong> These maps were digitized from
     photographed conference slides and may contain digitization errors. Verify against the official
     SARCOF-33 statement when released. Please do not circulate this link further.</div>
