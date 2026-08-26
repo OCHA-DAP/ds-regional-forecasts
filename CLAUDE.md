@@ -106,6 +106,18 @@ show less signal than unmasked as expected. Palette gotcha for future eyes:
 TG) uses the RdYlBu ramps — only PRCP gets teal/brown BrBG; onsetD gets BrBG
 reversed.
 
+SARCOF-33 photo digitization (2026-08-26): `src/digitize_sarcof_photos.py`
+recovers the Aug-2026 forum's 4-class consensus zones (OND/NDJ/DJF 2026/27,
+JFM 2027) from cell-phone slide photos in `raw/sadc/sarcof33-photos/` —
+homographies fitted against the SADC exterior outline (FFT-seeded +
+landmark fallback, matrices frozen in-module), hue-rule classification,
+seam-fill + speckle-clean; confidence-hatch detection experimental. Outputs
+in `processed/sarcof33/`. PRE-PUBLICATION material: not in the public site
+catalog/viewer — verify against the official statement when released.
+Headline: driest consensus outlook in our archive (BWA/NAM/ZAF/LSO/ZWE
+Below-Normal all trimesters), corroborated by SEAS5 2026-08 bottom-decile
+percentiles; TZA wet. Note SEAS5 issued Aug cannot cover JFM (needs lead 7).
+
 Downstream of the digitized stacks (all since 2026-08-24):
 - **Data viewer**: `derive_data_viewer.py` packs the two MME01 PRCP stacks as
   data-tile products (`sadc-mme`, `sadc-mme-full`). These carry a `groups`
