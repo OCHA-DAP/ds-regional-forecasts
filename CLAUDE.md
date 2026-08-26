@@ -106,6 +106,23 @@ show less signal than unmasked as expected. Palette gotcha for future eyes:
 TG) uses the RdYlBu ramps — only PRCP gets teal/brown BrBG; onsetD gets BrBG
 reversed.
 
+SARCOF consensus record (2026-08-26): `src/digitize_sarcof_statements.py`
+digitizes the 4-class consensus maps from every archived statement PDF —
+vintages 2017/18, 19/20, 20/21, 21/22, 23/24, 24/25, 25/26 (2018/19 +
+2022/23 statements lost; JFM only where drawn) — and merges the SARCOF-33
+photos into `processed/sarcof-consensus/sarcof_consensus.nc` + country
+stats/dry-ranks. Per-page candidate rasters (full render + each embedded
+map image; best exterior-outline fit wins, MIN_FIT 0.70 gate), pages whose
+first 1000 chars mention LONG-TERM/CLIMATOLOG are skipped (climatology
+figures caption their months and previously produced a false JFM). All 27
+fits 0.96–1.00; recons in `processed/sarcof-consensus/recons/` for QA.
+Legend probability triplets are constant across statements (A/N/B:
+40/35/25, 35/40/25, 25/40/35, 25/35/40) and recorded in the NetCDF attrs.
+KEY FINDING: 2026/27 is the driest consensus vintage on the 8-vintage
+record for BWA/LSO/NAM/SWZ/ZAF/ZWE/MOZ/ZMB in essentially every trimester,
+and the FIRST to use the Below-Normal class at scale — earlier vintages
+almost never drew brown. TZA wettest-ranked.
+
 SARCOF-33 photo digitization (2026-08-26): `src/digitize_sarcof_photos.py`
 recovers the Aug-2026 forum's 4-class consensus zones (OND/NDJ/DJF 2026/27,
 JFM 2027) from cell-phone slide photos in `raw/sadc/sarcof33-photos/` —
