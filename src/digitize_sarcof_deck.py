@@ -23,6 +23,19 @@ Output (data/processed/sarcof33/):
   maps/<season>.png                the extracted official map images
   recons/<season>.png              digitization QA renders
 Also prints per-season agreement vs the photo digitization.
+
+Second entry point (`python -m src.digitize_sarcof_deck osf`): the deck's
+GPC-outlook pages also embed the CSC's own MME tercile-PROBABILITY maps
+(OND + NDJ 2026, issued Aug 2026, skill-masked "-m" variant) — the standard
+OSF product, which csc.sadc.int has NOT published since 2026-Apr (probed:
+drupalSettings and constructed URLs both 404). The deck copies are the only
+available record, so they are digitized through digitize_osf's calibration
+(upscaled back to the canonical 1500x1500 render size; the CSC map is the
+only square embedded image on those pages). Kept OUT of raw/sadc/
+osf-seasonal/ so a future grab of the real files is not blocked — natives
+live beside the deck PDF in raw/sadc/sarcof/2026/osf-from-deck/, and the
+digitization goes to a separate sarcof33_mme_osf.nc (+ country stats with
+rank vs the MME01-masked record), not the canonical osf-digitized stacks.
 """
 
 import logging
@@ -250,5 +263,97 @@ def main() -> None:
     logger.info("\n" + df.pivot(index="iso3", columns="season", values="dryness_score").round(0).to_string())
 
 
+OSF_RAW = ROOT / "data" / "raw" / "sadc" / "sarcof" / "2026" / "osf-from-deck"
+
+
+def deck_osf_images(doc):
+    """(season, RGB array) for the CSC MME probability map on each
+    GPC-outlook page — the only square embedded image there (the WMO/other
+    GPC panels are not square)."""
+    import re
+
+    rx = re.compile(r"Global Producing Centre.{0,80}?(OND|NDJ|DJF|JFM)", re.S)
+    for page in doc:
+        m = rx.search(page.get_text()[:300])
+        if not m:
+            continue
+        for info in page.get_images(full=True):
+            xref, w, h = info[0], info[2], info[3]
+            if w < 700 or w != h:
+                continue
+            pix = fitz.Pixmap(doc, xref)
+            if pix.n - pix.alpha > 3:
+                pix = fitz.Pixmap(fitz.csRGB, pix)
+            arr = np.frombuffer(pix.samples, np.uint8).reshape(pix.height, pix.width, pix.n)[..., : 3]
+            yield m.group(1), arr
+
+
+def main_osf() -> None:
+    from src.digitize_osf import LATS as OLATS
+    from src.digitize_osf import LONS as OLONS
+    from src.digitize_osf import digitize_image
+    from src.osf_country_stats import country_masks, slice_stats
+
+    OSF_RAW.mkdir(parents=True, exist_ok=True)
+    doc = fitz.open(PDF)
+    res = {}
+    for season, arr in deck_osf_images(doc):
+        native = Image.fromarray(arr.astype(np.uint8))
+        native.save(OSF_RAW / f"PRCP_prob-tercile-m_MME01_2026-Aug_{season}.png")
+        tf = ROOT / "data" / "tmp" / f"deck_osf_{season}.png"
+        native.resize((1500, 1500), Image.LANCZOS).save(tf)
+        terc, plb = digitize_image(tf, "PRCP")
+        tf.unlink()
+        n_bad = int((terc == -1).sum())
+        logger.info(f"{season}: signal {int((terc > 0).sum())} cells, no-signal {int((terc == 0).sum())}, "
+                    f"unclassified/logo {n_bad}")
+        res[season] = (terc, plb)
+    if not res:
+        raise RuntimeError("no CSC MME probability maps found in the deck")
+
+    seasons = list(res)
+    ds = xr.Dataset(
+        {
+            "tercile": (("season", "lat", "lon"), np.stack([res[s][0] for s in seasons])),
+            "prob_lb": (("season", "lat", "lon"), np.stack([res[s][1] for s in seasons])),
+        },
+        coords={"season": seasons, "lat": OLATS, "lon": OLONS},
+        attrs={
+            "title": "CSC MME tercile-probability forecast (skill-masked), digitized from the SARCOF-33 official deck",
+            "issued": "2026-08",
+            "source": "official presentation deck, 26 Aug 2026 — csc.sadc.int has not published OSF issues past 2026-04, "
+                      "so the deck-embedded renders (downscaled by the slide layout, upscaled back to 1500px) are the only record",
+            "codes": "tercile -1 unrecoverable, 0 no-signal/masked, 1 below, 2 normal, 3 above; prob_lb = probability class lower bound",
+            "method": "src/digitize_sarcof_deck.py main_osf() via digitize_osf calibration",
+        },
+    )
+    ds.to_netcdf(OUT / "sarcof33_mme_osf.nc", encoding={"tercile": {"zlib": True, "complevel": 4}})
+    logger.info(f"wrote {OUT}/sarcof33_mme_osf.nc")
+
+    masks = country_masks(OLATS, OLONS)
+    rec = pd.read_parquet(ROOT / "data" / "processed" / "osf-digitized" / "osf_country_stats.parquet")
+    rec = rec[(rec.system == "MME01") & rec.skill_masked]
+    rows = []
+    for season in seasons:
+        terc, plb = res[season]
+        for iso, m in masks.items():
+            st = slice_stats(terc, plb, m)
+            if st is None:
+                continue
+            rd = rec[(rec.iso3 == iso) & (rec.season == season)]["dryness_score"]
+            rows.append({
+                "iso3": iso, "season": season, **st,
+                "pct_record_drier": float(round(100 * (rd > st["dryness_score"]).mean())) if len(rd) else np.nan,
+                "n_record": len(rd),
+            })
+    df = pd.DataFrame(rows)
+    df.to_parquet(OUT / "sarcof33_mme_osf_country_stats.parquet", index=False)
+    logger.info("\ndryness (pct of record drier):\n" + df.assign(
+        s=lambda d: d.dryness_score.round(0).astype(int).astype(str) + " (" + d.pct_record_drier.fillna(-1).astype(int).astype(str) + "%)"
+    ).pivot(index="iso3", columns="season", values="s").to_string())
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+
+    main_osf() if "osf" in sys.argv[1:] else main()

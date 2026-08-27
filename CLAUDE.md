@@ -148,6 +148,26 @@ version; headline unchanged (driest vintage on the 8-vintage record for
 BWA/LSO/NAM/SWZ/ZAF/ZMB/ZWE/MOZ; TZA wettest; official OND ranks COD/MWI
 wettest).
 
+The deck's GPC-outlook pages also embed the CSC's own MME
+tercile-PROBABILITY maps (OND + NDJ 2026 issued Aug 2026, skill-masked
+variant only; DJF/JFM not included) — csc.sadc.int has NOT published OSF
+issues past 2026-Apr (drupalSettings and constructed URLs both probed), so
+these are the only record. `python -m src.digitize_sarcof_deck osf`
+extracts them (the only square embedded image on "Global Producing
+Centre" pages), upscales the slide-downscaled renders back to 1500×1500
+and runs them through digitize_osf's calibration. Natives live at
+`raw/sadc/sarcof/2026/osf-from-deck/` (deliberately NOT under
+raw/sadc/osf-seasonal/, so a future grab of the real files is not
+blocked), digitization in `processed/sarcof33/sarcof33_mme_osf.nc` +
+country stats (NOT merged into the canonical osf-digitized stacks). The
+encrypted page shows the two maps and plots their wet-lean as the 2026
+MME dot in OND/NDJ facets. Result: BWA/LSO/SWZ/ZAF/ZWE driest vs the
+skill-masked MME record (0% of record drier), TZA wettest (-67). When
+CSC publishes, re-run grab_sadc -> digitize_osf -> osf_country_stats ->
+compare_osf_seas5 -> derive_assets/derive_data_viewer -> upload_blob as
+usual (public catalog/viewer/timeseries were deliberately NOT updated
+from the deck — pre-release).
+
 SARCOF-33 photo digitization (2026-08-26, SUPERSEDED by the official deck
 above — kept for provenance): `src/digitize_sarcof_photos.py`
 recovers the Aug-2026 forum's 4-class consensus zones (OND/NDJ/DJF 2026/27,

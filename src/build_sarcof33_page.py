@@ -152,6 +152,10 @@ def main() -> None:
     cstats = pd.read_parquet(ROOT / "data" / "processed" / "sarcof-consensus" / "sarcof_consensus_country_stats.parquet")
     cstats["wetlean"] = 50 - cstats.dryness_score * 50 / 70
     ts = json.loads((ROOT / "docs" / "data" / "timeseries.json").read_text())
+    # deck-extracted CSC MME tercile-probability issue (Aug 2026, skill-masked)
+    mme_deck = pd.read_parquet(ROOT / "data" / "processed" / "sarcof33" / "sarcof33_mme_osf_country_stats.parquet")
+    mme_deck["wetlean"] = (50 - mme_deck.dryness_score * 50 / 70).clip(0, 100)
+    deck_osf_dir = ROOT / "data" / "raw" / "sadc" / "sarcof" / "2026" / "osf-from-deck"
 
     sections = []
     for season in SEASONS:
@@ -163,6 +167,15 @@ def main() -> None:
             f'alt="Official SARCOF-33 {SEASON_LABEL[season]} map">'
             f'<figcaption><strong>Official SARCOF-33 map · {SEASON_LABEL[season]}</strong> · '
             f'CSC presentation, 26 Aug 2026</figcaption></figure>')
+        deck_osf = deck_osf_dir / f"PRCP_prob-tercile-m_MME01_2026-Aug_{season}.png"
+        if deck_osf.exists():
+            prob = Image.open(deck_osf).convert("RGB")
+            prob.thumbnail((760, 760), Image.LANCZOS)
+            figs.append(
+                f'<figure class="hl"><img src="{b64(prob, "JPEG", quality=82)}" '
+                f'alt="CSC MME tercile probabilities {SEASON_LABEL[season]}">'
+                f'<figcaption><strong>CSC MME tercile probabilities · {SEASON_LABEL[season]}</strong> · '
+                f'issued Aug 2026, skill-masked · from the official deck (not yet on csc.sadc.int)</figcaption></figure>')
         for vintage in [str(v) for v in cons.vintage.values][::-1]:  # newest first
             sel = cons.sel(vintage=vintage, season=season)
             if int((sel["clazz"].values >= 0).sum()) == 0:
@@ -182,6 +195,9 @@ def main() -> None:
                 k_iso, k_seas, k_mm = key.split("|")
                 if k_iso == iso and k_seas == season:
                     mme += [(y, v, k_mm) for y, v in series.items()]
+            dk = mme_deck[(mme_deck.iso3 == iso) & (mme_deck.season == season)]
+            if len(dk):
+                mme.append(("2026", round(float(dk.wetlean.iloc[0])), "08 (deck, skill-masked)"))
             sub = cstats[(cstats.iso3 == iso) & (cstats.season == season)]
             newv, prior = None, []
             for _, r in sub.iterrows():
@@ -198,7 +214,9 @@ def main() -> None:
     <div class="grid">{''.join(facets)}</div>
     <p class="note">SEAS5 line: issued month {S5_MONTH[season]}, percentile vs 1993–2022 climatology
       (large dot = the current 2026 issue{'' if season != 'JFM' else ' — not yet available for JFM from a September issue'}).
-      Teal dots: archived CSC MME issues (all issue months, wet-lean 0–100). Filled magenta diamond: this
+      Teal dots: archived CSC MME issues (all issue months, wet-lean 0–100){'' if season not in ('OND', 'NDJ') else
+      ' — the 2026 dot is the Aug-2026 skill-masked issue recovered from the official deck (not on csc.sadc.int yet;'
+      ' skill-masked issues show less signal than the unmasked archive series)'}. Filled magenta diamond: this
       SARCOF-33 consensus zone score; hollow magenta diamonds: prior years' consensus outlooks
       (digitized from the statement PDFs), plotted at their target year.</p>
   </section>""")
