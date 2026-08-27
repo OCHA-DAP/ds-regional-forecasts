@@ -117,7 +117,7 @@ def prior_images(season: str) -> list[tuple[str, str]]:
 
 
 def facet_svg(iso: str, season: str, s5: dict, mme: list, newv: float | None,
-              prior: list | None = None) -> str:
+              prior: list | None = None, mme_masked: list | None = None) -> str:
     Y0, Y1, W, H, mL, mR, mT, mB = 1993, 2027.6, 300, 130, 26, 6, 6, 16
     xs = lambda yr: mL + (yr - Y0) / (Y1 - Y0) * (W - mL - mR)
     ys = lambda v: mT + (100 - v) / 100 * (H - mT - mB)
@@ -136,6 +136,13 @@ def facet_svg(iso: str, season: str, s5: dict, mme: list, newv: float | None,
         s += "".join(f'<circle cx="{xs(y):.1f}" cy="{ys(v):.1f}" r="{3 if y == 2026 else 1.8}" fill="{S5_C}"><title>SEAS5 {y}: p{v}</title></circle>' for y, v in pts)
     for y, v, mm in mme:
         s += f'<circle cx="{xs(int(y)):.1f}" cy="{ys(v):.1f}" r="3" fill="{OSF_C}" stroke="#fff" stroke-width="1"><title>MME issued {y}-{mm}: wet-lean {v}</title></circle>'
+    # skill-masked MME series: hollow circles, like-for-like with the
+    # deck-recovered Aug-2026 masked issue (thick-ringed)
+    for y, v, mm in (mme_masked or []):
+        is_deck = "deck" in mm
+        s += (f'<circle cx="{xs(int(y)):.1f}" cy="{ys(v):.1f}" r="{3.6 if is_deck else 2.6}" fill="none" '
+              f'stroke="{OSF_C}" stroke-width="{2 if is_deck else 1.2}">'
+              f'<title>MME (skill-masked) issued {y}-{mm}: wet-lean {v}</title></circle>')
     for y, v, vintage in (prior or []):
         x, yy_ = xs(y + 0.35), ys(v)
         s += (f'<path d="M {x:.1f} {yy_ - 5:.1f} L {x + 4.3:.1f} {yy_:.1f} L {x:.1f} {yy_ + 5:.1f} L {x - 4.3:.1f} {yy_:.1f} Z" '
@@ -191,13 +198,16 @@ def main() -> None:
             mm = S5_MONTH[season]
             s5 = ts["seas5"].get(f"{iso}|{season}|{mm}", {})
             mme = []
-            for key, series in ts["osf"]["sadc-mme-full"].items():
-                k_iso, k_seas, k_mm = key.split("|")
-                if k_iso == iso and k_seas == season:
-                    mme += [(y, v, k_mm) for y, v in series.items()]
+            mmem = []
+            for prod, dest in (("sadc-mme-full", mme), ("sadc-mme", mmem)):
+                for key, series in ts["osf"][prod].items():
+                    k_iso, k_seas, k_mm = key.split("|")
+                    if k_iso == iso and k_seas == season:
+                        dest += [(y, v, k_mm) for y, v in series.items()]
             dk = mme_deck[(mme_deck.iso3 == iso) & (mme_deck.season == season)]
-            if len(dk):
-                mme.append(("2026", round(float(dk.wetlean.iloc[0])), "08 (deck, skill-masked)"))
+            has_deck = len(dk) > 0
+            if has_deck:
+                mmem.append(("2026", round(float(dk.wetlean.iloc[0])), "08 (deck)"))
             sub = cstats[(cstats.iso3 == iso) & (cstats.season == season)]
             newv, prior = None, []
             for _, r in sub.iterrows():
@@ -206,7 +216,8 @@ def main() -> None:
                     newv = float(r.wetlean)
                 else:
                     prior.append((int(r.issued[:4]), float(r.wetlean), r.vintage))
-            facets.append(facet_svg(iso, season, s5, mme, newv, prior))
+            facets.append(facet_svg(iso, season, s5, mme, newv, prior,
+                                    mmem if has_deck else None))
         sections.append(f"""
   <section>
     <h2>{SEASON_LABEL[season]}</h2>
@@ -214,9 +225,10 @@ def main() -> None:
     <div class="grid">{''.join(facets)}</div>
     <p class="note">SEAS5 line: issued month {S5_MONTH[season]}, percentile vs 1993–2022 climatology
       (large dot = the current 2026 issue{'' if season != 'JFM' else ' — not yet available for JFM from a September issue'}).
-      Teal dots: archived CSC MME issues (all issue months, wet-lean 0–100){'' if season not in ('OND', 'NDJ') else
-      ' — the 2026 dot is the Aug-2026 skill-masked issue recovered from the official deck (not on csc.sadc.int yet;'
-      ' skill-masked issues show less signal than the unmasked archive series)'}. Filled magenta diamond: this
+      Solid teal dots: archived CSC MME issues, unmasked (all issue months, wet-lean 0–100).{'' if season not in ('OND', 'NDJ') else
+      ' Hollow teal circles: the archived SKILL-MASKED MME issues — the like-for-like record for the'
+      ' thick-ringed 2026 circle, the Aug-2026 skill-masked issue recovered from the official deck'
+      ' (not on csc.sadc.int yet). Masked issues show less signal, so compare hollow with hollow.'} Filled magenta diamond: this
       SARCOF-33 consensus zone score; hollow magenta diamonds: prior years' consensus outlooks
       (digitized from the statement PDFs), plotted at their target year.</p>
   </section>""")
@@ -224,7 +236,8 @@ def main() -> None:
     legend = "".join(
         f'<span class="chip"><i style="background:rgb{PAL[c]}"></i>{CLASS_LABEL[c]}</span>' for c in PAL
     ) + f'<span class="chip"><i style="background:{S5_C}"></i>raw SEAS5</span>' \
-        f'<span class="chip"><i style="background:{OSF_C}"></i>CSC MME archive</span>' \
+        f'<span class="chip"><i style="background:{OSF_C}"></i>CSC MME archive (unmasked)</span>' \
+        f'<span class="chip"><i style="background:#fff;border:1.5px solid {OSF_C};border-radius:50%"></i>CSC MME skill-masked</span>' \
         f'<span class="chip"><i style="background:{NEW_C}"></i>SARCOF-33 consensus</span>' \
         f'<span class="chip"><i style="background:#fff;border:1.5px solid {NEW_C}"></i>prior consensus vintages</span>'
 
