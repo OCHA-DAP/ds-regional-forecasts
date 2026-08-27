@@ -123,17 +123,42 @@ record for BWA/LSO/NAM/SWZ/ZAF/ZWE/MOZ/ZMB in essentially every trimester,
 and the FIRST to use the Below-Normal class at scale — earlier vintages
 almost never drew brown. TZA wettest-ranked.
 
-SARCOF-33 photo digitization (2026-08-26): `src/digitize_sarcof_photos.py`
+SARCOF-33 official deck (2026-08-27): `src/digitize_sarcof_deck.py`
+digitizes the official CSC presentation ("SADC Regional Seasonal Outlook
+for the 2026/27 season", presented 26 Aug 2026, archived at
+`data/raw/sadc/sarcof/2026/SARCOF-33_Regional_Seasonal_Outlook_2026-27_presentation.pdf`,
+NOT in the public catalog — pre-release until the statement is published)
+and SUPERSEDES the photo digitization below. The four merged-forecast maps
+are the largest embedded image on each "Seasonal Outlook for <season>"
+page (the smaller map-sized image is a CHIRPS climatology panel).
+Georeferencing does NOT reuse the statement fitter: its edge-mask score
+locks onto the confidence-hatch texture (classified all of OND as
+Below-Normal at fit 0.83), and the maps carry no graticule lines — instead
+`fit_map` scores coastline point pairs (offshore must hit the flat ocean
+fill (171,210,225), inland must not; coast-ness decided against the
+all-Africa union, simplified BEFORE unioning or shapely eats GBs).
+Slide-layout crops (NDJ/DJF/JFM cut at ~11.5°E) strand the fit at score 0
+— white-padding the image first fixes it. Outputs in
+`processed/sarcof33/`: `sarcof33_official_digitized.nc`, country stats,
+`maps/` (extracted originals), `recons/` (QA). Photo-vs-official cell
+agreement 94–97% per season; the confidence layer is now reliable
+(validated: OND hatched across the whole south + clean DRC; JFM clean
+eastern ZAF). Consensus record + encrypted page now use the official
+version; headline unchanged (driest vintage on the 8-vintage record for
+BWA/LSO/NAM/SWZ/ZAF/ZMB/ZWE/MOZ; TZA wettest; official OND ranks COD/MWI
+wettest).
+
+SARCOF-33 photo digitization (2026-08-26, SUPERSEDED by the official deck
+above — kept for provenance): `src/digitize_sarcof_photos.py`
 recovers the Aug-2026 forum's 4-class consensus zones (OND/NDJ/DJF 2026/27,
 JFM 2027) from cell-phone slide photos in `raw/sadc/sarcof33-photos/` —
 homographies fitted against the SADC exterior outline (FFT-seeded +
 landmark fallback, matrices frozen in-module), hue-rule classification,
 seam-fill + speckle-clean; confidence-hatch detection experimental. Outputs
-in `processed/sarcof33/`. PRE-PUBLICATION material: not in the public site
-catalog/viewer — verify against the official statement when released.
-Headline: driest consensus outlook in our archive (BWA/NAM/ZAF/LSO/ZWE
-Below-Normal all trimesters), corroborated by SEAS5 2026-08 bottom-decile
-percentiles; TZA wet. Note SEAS5 issued Aug cannot cover JFM (needs lead 7).
+in `processed/sarcof33/`. Headline: driest consensus outlook in our archive
+(BWA/NAM/ZAF/LSO/ZWE Below-Normal all trimesters), corroborated by SEAS5
+2026-08 bottom-decile percentiles; TZA wet. Note SEAS5 issued Aug cannot
+cover JFM (needs lead 7).
 
 Downstream of the digitized stacks (all since 2026-08-24):
 - **Data viewer**: `derive_data_viewer.py` packs the two MME01 PRCP stacks as

@@ -156,12 +156,19 @@ def main() -> None:
     sections = []
     for season in SEASONS:
         figs = []
+        official = Image.open(ROOT / "data" / "processed" / "sarcof33" / "maps" / f"{season}.png").convert("RGB")
+        official.thumbnail((980, 980), Image.LANCZOS)
+        figs.append(
+            f'<figure class="hl wide"><img src="{b64(official, "JPEG", quality=82)}" '
+            f'alt="Official SARCOF-33 {SEASON_LABEL[season]} map">'
+            f'<figcaption><strong>Official SARCOF-33 map · {SEASON_LABEL[season]}</strong> · '
+            f'CSC presentation, 26 Aug 2026</figcaption></figure>')
         for vintage in [str(v) for v in cons.vintage.values][::-1]:  # newest first
             sel = cons.sel(vintage=vintage, season=season)
             if int((sel["clazz"].values >= 0).sum()) == 0:
                 continue  # season not drawn that year
             is_new = vintage == "2026/27"
-            src_note = "digitized from forum slides (photos)" if is_new else "digitized from the statement PDF"
+            src_note = "digitized from the official presentation deck" if is_new else "digitized from the statement PDF"
             title = f"SARCOF-33 consensus · {SEASON_LABEL[season]}" if is_new else f"Consensus {season} {vintage}"
             figs.append(
                 f'<figure{" class=hl" if is_new else ""}><img src="{b64(render_sarcof(sel))}" alt="{title}">'
@@ -216,6 +223,7 @@ def main() -> None:
   .warn {{ background: #fdf3e0; border: 1px solid #eachd; border-radius: 8px; padding: 10px 14px; font-size: 13.5px; margin: 14px 0; }}
   .maps {{ display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; }}
   figure {{ margin: 0; flex: 0 0 auto; width: 265px; }}
+  figure.wide {{ width: 430px; }}
   figure img {{ width: 100%; border: 1px solid #e1e0d9; border-radius: 6px; background: #fff; }}
   figure.hl img {{ border: 2px solid #b3266d; }}
   figcaption {{ font-size: 12px; color: #52514e; margin-top: 3px; }}
@@ -230,14 +238,15 @@ def main() -> None:
   .note {{ font-size: 12.5px; color: #52514e; }}
 </style></head><body><main>
   <h1>SARCOF-33 seasonal outlook — 2026/27 rainfall season</h1>
-  <p class="note">Digitized by OCHA CHD Data Science — SARCOF-33 from photos of the forum presentation
-    (Aug 2026), prior vintages (2017/18–2025/26, gaps 2018/19 &amp; 2022/23) from the official statement
-    PDFs · grid 0.25°, class zones; dotted texture = high-confidence overlay (experimental detection).
-    Per the statement legends each class is a tercile-probability triplet (A/N/B): Above-Normal 40/35/25,
-    Normal-to-Above 35/40/25, Normal-to-Below 25/40/35, Below-Normal 25/35/40.</p>
-  <div class="warn"><strong>Pre-publication material.</strong> These maps were digitized from
-    photographed conference slides and may contain digitization errors. Verify against the official
-    SARCOF-33 statement when released. Please do not circulate this link further.</div>
+  <p class="note">Digitized by OCHA CHD Data Science — SARCOF-33 from the official CSC presentation
+    deck (26 Aug 2026), prior vintages (2017/18–2025/26, gaps 2018/19 &amp; 2022/23) from the official
+    statement PDFs · grid 0.25°, class zones; dotted texture = high-confidence overlay (reliable for
+    2026/27, detected from the clean official render). Per the statement legends each class is a
+    tercile-probability triplet (A/N/B): Above-Normal 40/35/25, Normal-to-Above 35/40/25,
+    Normal-to-Below 25/40/35, Below-Normal 25/35/40.</p>
+  <div class="warn"><strong>Pre-release material.</strong> SARCOF-33 maps come from the official
+    presentation deck delivered at the forum (26 Aug 2026); the final published statement may still
+    differ. Please do not circulate this link further.</div>
   <div class="chips">{legend}</div>
   {''.join(sections)}
   <p class="note">Wet-lean scale: 50 = neutral; SEAS5 shown as climatological percentile; MME archive

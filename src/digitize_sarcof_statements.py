@@ -8,7 +8,8 @@ and merges the SARCOF-33 photo digitization (src/digitize_sarcof_photos.py)
 into one consensus record.
 
 Vintages: SARCOF-21 (2017/18), 23 (2019/20), 24 (2020/21), 25 (2021/22),
-27 (2023/24), 29 (2024/25), 31 (2025/26), 33 (2026/27, photos).
+27 (2023/24), 29 (2024/25), 31 (2025/26), 33 (2026/27, official deck via
+src/digitize_sarcof_deck.py).
 Gaps: 2018/19 and 2022/23 (the SARCOF-22 and -26 statements are lost);
 JFM maps only exist where the forum drew them (23, 24, 25, 33).
 
@@ -300,8 +301,9 @@ def main() -> None:
         cubes.append(cube)
         confs_all.append(confc)
 
-    # merge SARCOF-33 photo digitization as the 2026/27 vintage
-    ph = xr.open_dataset(ROOT / "data" / "processed" / "sarcof33" / "sarcof33_photo_digitized.nc")
+    # merge the SARCOF-33 official-deck digitization as the 2026/27 vintage
+    # (src/digitize_sarcof_deck.py; supersedes the cell-phone-photo version)
+    ph = xr.open_dataset(ROOT / "data" / "processed" / "sarcof33" / "sarcof33_official_digitized.nc")
     cube = np.full((len(SEASONS_ALL), len(LATS), len(LONS)), -1, np.int8)
     confc = np.zeros_like(cube, dtype=bool)
     for si, season in enumerate(SEASONS_ALL):
@@ -325,7 +327,7 @@ def main() -> None:
             "lat": LATS, "lon": LONS,
         },
         attrs={
-            "title": "SARCOF consensus outlooks digitized from statement PDFs (+ 2026/27 forum photos)",
+            "title": "SARCOF consensus outlooks digitized from statement PDFs (+ 2026/27 official presentation deck)",
             "class_codes": "-1 outside SADC / no map, 0 unknown, 1 Below-Normal, 2 Normal-to-Below, 3 Normal-to-Above, 4 Above-Normal",
             "probability_triplets": json.dumps({CLASS_NAMES[k]: v for k, v in PROB_TRIPLETS.items()})
             + " (A/N/B percent, per the statement legends)",
