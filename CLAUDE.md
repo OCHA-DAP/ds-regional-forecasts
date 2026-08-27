@@ -161,7 +161,23 @@ raw/sadc/osf-seasonal/, so a future grab of the real files is not
 blocked), digitization in `processed/sarcof33/sarcof33_mme_osf.nc` +
 country stats (NOT merged into the canonical osf-digitized stacks). The
 encrypted page shows the two maps and plots their wet-lean as the 2026
-MME dot in OND/NDJ facets. Result: BWA/LSO/SWZ/ZAF/ZWE driest vs the
+MME dot in OND/NDJ facets (hollow-circle skill-masked series — masked
+issues are only ever compared with the masked record, never mixed into
+the unmasked `sadc-mme-full` solid dots).
+
+Page layout per trimester (2026-08-27): ONE `.dual` CSS grid —
+`grid-auto-flow: column` with two rows (consensus on top, CSC MME
+skill-masked probability map below), columns keyed by TARGET year so the
+two products line up, all inside a single `overflow-x: auto` container
+so the rows scroll together by construction (no JS — safer inside
+staticrypt). The 2026/27 column is `position: sticky; left: 0` so only
+the historicals scroll. Historical MME column per year = the archived
+issue whose lead is CLOSEST to the current August issue's lead
+(`masked_mme_images`), not the earliest — like-for-like lead matters.
+Empty `.nocell` divs keep column alignment where a year has one product
+but not the other (masked MME archive only starts 2023-06, so older
+consensus columns have no MME row); DJF/JFM get a `.nomme` note since
+the deck carries OND/NDJ probability maps only. Result: BWA/LSO/SWZ/ZAF/ZWE driest vs the
 skill-masked MME record (0% of record drier), TZA wettest (-67). When
 CSC publishes, re-run grab_sadc -> digitize_osf -> osf_country_stats ->
 compare_osf_seas5 -> derive_assets/derive_data_viewer -> upload_blob as

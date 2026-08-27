@@ -1,9 +1,11 @@
 """Build the (to-be-encrypted) SARCOF-33 review page.
 
-Self-contained HTML: the digitized 2026/27 consensus maps rendered per
-season, side-by-side with the earliest archived MME map for each previous
-target year of the same season, plus per-country time-series facets (raw
-SEAS5 percentile line, MME wet-lean dots, SARCOF-33 consensus diamond).
+Self-contained HTML. Per trimester: a two-row map scroller — consensus on
+top, CSC MME skill-masked probability maps below — columns aligned by
+target year, one shared scroll container (rows scroll together) with the
+2026/27 column position:sticky so only historicals scroll. Plus
+per-country time-series facets (raw SEAS5 percentile line, MME wet-lean
+dots incl. the hollow skill-masked series, SARCOF consensus diamonds).
 Everything is inlined (base64 / SVG) so the single output file can be
 staticrypt-ed; the plaintext lives under data/ (gitignored) and must NEVER
 be committed or uploaded — only the encrypted docs/sarcof33.html is.
@@ -92,27 +94,34 @@ def render_sarcof(sel: xr.Dataset, scale=5) -> Image.Image:
     return out
 
 
-def prior_images(season: str) -> list[tuple[str, str]]:
-    """(caption, b64 jpg) for the earliest archived MME issue of each previous
-    target year of this season."""
+def year_label(ty: int, season: str) -> str:
+    return f"{ty}/{str(ty + 1)[2:]}" if SEASON_START[season] >= 11 else f"{ty}"
+
+
+def masked_mme_images(season: str) -> dict[int, str]:
+    """target year -> <figure> for the archived SKILL-MASKED MME issue of that
+    year whose lead is closest to the current Aug-2026 issue's lead — the
+    like-for-like historical counterpart of the deck's probability map."""
     start = SEASON_START[season]
+    ref_lead = (start - 8) % 12  # lead of an August issue for this season
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     by_year = {}
     for f in sorted(RAW_IMG.glob(f"*/PRCP_prob-tercile-m_MME01_*_{season}.jpg")):
         m = re.search(r"MME01_(\d{4})-([A-Za-z]{3})_", f.name)
-        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         iy, im_ = int(m.group(1)), months.index(m.group(2)) + 1
         ty = iy + (1 if start < im_ else 0)
         lead = (start - im_) % 12
         cur = by_year.get(ty)
-        if cur is None or lead > cur[0]:
+        if cur is None or abs(lead - ref_lead) < abs(cur[0] - ref_lead):
             by_year[ty] = (lead, f, f"{m.group(2)} {iy}")
-    out = []
-    for ty in sorted(by_year):
-        lead, f, issued = by_year[ty]
-        yl = f"{ty}" if season == "OND" else (f"{ty}/{str(ty + 1)[2:]}" if start >= 11 else f"{ty}")
-        img = Image.open(f)
-        img.thumbnail((560, 620), Image.LANCZOS)
-        out.append((f"MME {season} {yl} · issued {issued}", b64(img.convert('RGB'), 'JPEG', quality=72)))
+    out = {}
+    for ty, (lead, f, issued) in by_year.items():
+        img = Image.open(f).convert("RGB")
+        img.thumbnail((460, 460), Image.LANCZOS)
+        out[ty] = (
+            f'<figure><img src="{b64(img, "JPEG", quality=72)}" alt="MME {season} {ty} skill-masked">'
+            f'<figcaption><strong>MME {season} {year_label(ty, season)}</strong> · issued {issued} '
+            f'(lead {lead}), skill-masked</figcaption></figure>')
     return out
 
 
@@ -166,33 +175,42 @@ def main() -> None:
 
     sections = []
     for season in SEASONS:
-        figs = []
         official = Image.open(ROOT / "data" / "processed" / "sarcof33" / "maps" / f"{season}.png").convert("RGB")
         official.thumbnail((980, 980), Image.LANCZOS)
-        figs.append(
-            f'<figure class="hl wide"><img src="{b64(official, "JPEG", quality=82)}" '
+        pin_cons = (
+            f'<div class="pin"><figure class="hl cons"><img src="{b64(official, "JPEG", quality=82)}" '
             f'alt="Official SARCOF-33 {SEASON_LABEL[season]} map">'
-            f'<figcaption><strong>Official SARCOF-33 map · {SEASON_LABEL[season]}</strong> · '
-            f'CSC presentation, 26 Aug 2026</figcaption></figure>')
+            f'<figcaption><strong>Official SARCOF-33 · {SEASON_LABEL[season]}</strong> · '
+            f'consensus map, CSC presentation 26 Aug 2026</figcaption></figure></div>')
         deck_osf = deck_osf_dir / f"PRCP_prob-tercile-m_MME01_2026-Aug_{season}.png"
         if deck_osf.exists():
             prob = Image.open(deck_osf).convert("RGB")
             prob.thumbnail((760, 760), Image.LANCZOS)
-            figs.append(
-                f'<figure class="hl"><img src="{b64(prob, "JPEG", quality=82)}" '
+            pin_mme = (
+                f'<div class="pin"><figure class="hl prob"><img src="{b64(prob, "JPEG", quality=82)}" '
                 f'alt="CSC MME tercile probabilities {SEASON_LABEL[season]}">'
-                f'<figcaption><strong>CSC MME tercile probabilities · {SEASON_LABEL[season]}</strong> · '
-                f'issued Aug 2026, skill-masked · from the official deck (not yet on csc.sadc.int)</figcaption></figure>')
-        for vintage in [str(v) for v in cons.vintage.values][::-1]:  # newest first
+                f'<figcaption><strong>CSC MME probabilities · {SEASON_LABEL[season]}</strong> · '
+                f'issued Aug 2026, skill-masked · official deck</figcaption></figure></div>')
+        else:
+            pin_mme = ('<div class="pin"><div class="nomme">No Aug-2026 MME probability map — '
+                       'the deck carries OND and NDJ only. Historical skill-masked issues at right.</div></div>')
+        cons_by_year = {}
+        for vintage in [str(v) for v in cons.vintage.values]:
+            if vintage == "2026/27":
+                continue  # pinned column shows the official map instead
             sel = cons.sel(vintage=vintage, season=season)
             if int((sel["clazz"].values >= 0).sum()) == 0:
                 continue  # season not drawn that year
-            is_new = vintage == "2026/27"
-            src_note = "digitized from the official presentation deck" if is_new else "digitized from the statement PDF"
-            title = f"SARCOF-33 consensus · {SEASON_LABEL[season]}" if is_new else f"Consensus {season} {vintage}"
-            figs.append(
-                f'<figure{" class=hl" if is_new else ""}><img src="{b64(render_sarcof(sel))}" alt="{title}">'
-                f'<figcaption><strong>{title}</strong> · {src_note}</figcaption></figure>')
+            ty = int(vintage[:4]) + (1 if season == "JFM" else 0)
+            cons_by_year[ty] = (
+                f'<figure><img src="{b64(render_sarcof(sel))}" alt="Consensus {season} {vintage}">'
+                f'<figcaption><strong>Consensus {season} {vintage}</strong> · '
+                f'digitized from the statement PDF</figcaption></figure>')
+        mme_by_year = masked_mme_images(season)
+        cells = [pin_cons, pin_mme]
+        for ty in sorted(set(cons_by_year) | set(mme_by_year), reverse=True):
+            cells.append(cons_by_year.get(ty, '<div class="nocell"></div>'))
+            cells.append(mme_by_year.get(ty, '<div class="nocell"></div>'))
         facets = []
         for iso in sorted(ISO_NAMES, key=ISO_NAMES.get):
             mm = S5_MONTH[season]
@@ -221,7 +239,12 @@ def main() -> None:
         sections.append(f"""
   <section>
     <h2>{SEASON_LABEL[season]}</h2>
-    <div class="maps">{''.join(figs)}</div>
+    <div class="dual">{''.join(cells)}</div>
+    <p class="note">Top row: SARCOF consensus per target year (historical columns are our digitized
+      reconstructions from the statement PDFs). Bottom row: the CSC MME skill-masked
+      tercile-probability map for the same target season — per year, the archived issue whose lead is
+      closest to the current August issue. The rows share one scroller (they move together); the
+      2026/27 column stays pinned.</p>
     <div class="grid">{''.join(facets)}</div>
     <p class="note">SEAS5 line: issued month {S5_MONTH[season]}, percentile vs 1993–2022 climatology
       (large dot = the current 2026 issue{'' if season != 'JFM' else ' — not yet available for JFM from a September issue'}).
@@ -252,9 +275,18 @@ def main() -> None:
   h1 {{ font-size: 22px; margin: 0 0 4px; }}
   h2 {{ font-size: 18px; margin: 34px 0 10px; border-top: 1px solid #e1e0d9; padding-top: 18px; }}
   .warn {{ background: #fdf3e0; border: 1px solid #eachd; border-radius: 8px; padding: 10px 14px; font-size: 13.5px; margin: 14px 0; }}
-  .maps {{ display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; }}
+  .dual {{ display: grid; grid-template-rows: auto auto; grid-auto-flow: column;
+          column-gap: 0; row-gap: 12px; overflow-x: auto; align-items: start; padding-bottom: 4px; }}
+  .dual figure {{ width: 230px; margin: 0 14px 0 0; }}
+  .dual .pin {{ position: sticky; left: 0; z-index: 2; background: #fcfcfb;
+               padding-right: 14px; border-right: 1px solid #e1e0d9; margin-right: 14px; }}
+  .dual .pin figure {{ margin-right: 0; }}
+  .dual .pin figure.cons {{ width: 430px; }}
+  .dual .pin figure.prob {{ width: 300px; }}
+  .nomme {{ width: 300px; font-size: 12.5px; color: #52514e; background: #f4f3ef;
+           border: 1px dashed #d5d3ca; border-radius: 6px; padding: 10px 12px; }}
+  .nocell {{ min-width: 0; }}
   figure {{ margin: 0; flex: 0 0 auto; width: 265px; }}
-  figure.wide {{ width: 430px; }}
   figure img {{ width: 100%; border: 1px solid #e1e0d9; border-radius: 6px; background: #fff; }}
   figure.hl img {{ border: 2px solid #b3266d; }}
   figcaption {{ font-size: 12px; color: #52514e; margin-top: 3px; }}
